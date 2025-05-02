@@ -1,4 +1,4 @@
-import { query as connection } from "../database.js";
+import { query as connection } from "../config/database.js";
 
 function getLeaveDaysByMonth(startDateTime, endDateTime) {
   const leaveDaysByMonth = {};

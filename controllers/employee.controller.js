@@ -1,4 +1,5 @@
-import { query as connection } from "../database.js";
+import { query as connection } from "../config/database.js";
+import logger from "../config/logger.js";
 
 const getEmployeeById = async (employee_id) => {
   try {
@@ -31,11 +32,22 @@ export const addEmployee = async (req, res) => {
     performance_bonus,
     allowances,
   } = req.body;
-
+  logger.info("Adding employee", req.body);
   if (!email || !name || !designation || !department || !basic_salary) {
     return res.status(400).json({ message: "Required fields are missing" });
   }
   try {
+    const [existingEmployee] = await connection.query(
+      "SELECT * FROM employee WHERE email = ?",
+      [email]
+    );
+    if (existingEmployee.length > 0) {
+      logger.error("Employee with this email already exists");
+      return res
+        .status(400)
+        .json({ message: "Employee with this email already exists" });
+    }
+
     const [results] = await connection.query(
       "INSERT INTO employee (email, name, designation, department, base_salary, max_approval_level, role, in_notice) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
       [
@@ -58,7 +70,11 @@ export const addEmployee = async (req, res) => {
         allowances,
         performance_bonus
       );
+      logger.info(
+        `Employee payroll created for employee_id: ${results.insertId}`
+      );
     } else {
+      logger.error("Failed to create Employee");
       return res.status(500).json({ message: "Failed to add employee" });
     }
     res.status(201).json({
@@ -66,6 +82,7 @@ export const addEmployee = async (req, res) => {
       employee_id: results.insertId,
     });
   } catch (error) {
+    logger.error("Error adding employee:", error.message);
     res.status(500).json({
       error: error.message,
     });
@@ -74,7 +91,7 @@ export const addEmployee = async (req, res) => {
 
 export const setManager = async (req, res) => {
   const { employeeEmail, managerEmail } = req.query;
-
+  logger.info("Setting manager for employee", req.query);
   if (!employeeEmail || !managerEmail) {
     return res.status(400).json({ message: "Required Parameters are missing" });
   }
@@ -83,12 +100,13 @@ export const setManager = async (req, res) => {
       "SELECT employee_id,role FROM employee WHERE email = ?",
       [managerEmail]
     );
-    console.log(manager_results[0].role);
+
     if (
       manager_results.length === 0 ||
       (manager_results[0].role !== "manager" &&
         manager_results[0].role !== "hr")
     ) {
+      logger.error("Manager not found or Invalid role for assignment");
       return res
         .status(404)
         .json({ message: "Manager not found or Invalid role for assignment" });
@@ -100,11 +118,15 @@ export const setManager = async (req, res) => {
       "UPDATE employee  SET manager_id = ? WHERE email = ? ",
       [id, employeeEmail]
     );
-
+    logger.info("Manager assigned successfully", {
+      employeeEmail,
+      managerEmail,
+    });
     res.status(201).json({
       results,
     });
   } catch (error) {
+    logger.error("Error setting manager:", error.message);
     res.status(500).json({
       error,
     });
@@ -123,8 +145,12 @@ export const updateEmployee = async (req, res) => {
   } = req.body;
 
   const { employee_id } = req.params;
-
+  logger.info("Updating employee", {
+    body: req.body,
+    employee_id,
+  });
   if (!employee_id) {
+    logger.error("Employee ID is required to update employee");
     return res.status(400).json({ message: "Employee ID is required" });
   }
   if (
@@ -136,6 +162,7 @@ export const updateEmployee = async (req, res) => {
     !role ||
     in_notice === undefined
   ) {
+    logger.error("Required fields are missing for employee update");
     return res.status(400).json({ message: "Required fields are missing" });
   }
 
@@ -163,13 +190,17 @@ export const updateEmployee = async (req, res) => {
     );
 
     if (results.affectedRows === 0) {
+      logger.error("Employee not found for update");
       return res.status(404).json({ message: "Employee not found" });
     }
-
+    logger.info("Employee updated successfully", {
+      employee_id,
+    });
     res.status(204).json({
       message: "Employee updated successfully",
     });
   } catch (error) {
+    logger.error("Error updating employee:", error.message);
     res.status(500).json({
       error: error.message,
     });
@@ -183,8 +214,17 @@ const createEmployeePayroll = async (
   lop_deduction_per_day
 ) => {
   if (!employee_id) {
+    logger.error("Employee ID is required to create payroll settings");
     throw new Error("Employee id is required");
   }
+
+  logger.info("Creating employee payroll", {
+    employee_id,
+    base_salary,
+    performance_bonus,
+    allowances,
+    lop_deduction_per_day,
+  });
 
   try {
     const [insert_results] = await connection.query(
@@ -202,9 +242,11 @@ const createEmployeePayroll = async (
     );
 
     if (insert_results.affectedRows === 0) {
+      logger.error("Failed to create employee payroll settings");
       throw new Error("Failed to create employee payroll settings");
     }
   } catch (error) {
+    logger.error("Error creating employee payroll settings:", error.message);
     throw new Error(
       "Error creating employee payroll settings: " + error.message
     );
@@ -215,7 +257,11 @@ export const getRemainingLeavesByEmployee = async (req, res) => {
   const { employee_id } = req.params;
 
   const { leavepolicy_id, year } = req.query;
-
+  logger.info("Getting remaining leaves for employee", {
+    employee_id,
+    leavepolicy_id,
+    year,
+  });
   if (!employee_id || !leavepolicy_id || !year) {
     throw new Error("Required Parameters Missing");
   }
@@ -226,16 +272,21 @@ export const getRemainingLeavesByEmployee = async (req, res) => {
     );
 
     if (leaveRemainingResult.length === 0) {
+      logger.info("No leave taken for the particular year");
       return res.status(201).json({
         message: "No Leave Taken for the particular year",
       });
     }
     const leaveRemaining = leaveRemainingResult[0].leave_remaining;
-
+    logger.info("Leave remaining for employee", {
+      employee_id,
+      leaveRemaining,
+    });
     res.status(200).json({
       leaveRemaining,
     });
   } catch (error) {
+    logger.error("Error getting remaining leaves:", error.message);
     res.status(500).json({
       error: error.message,
     });
@@ -244,19 +295,24 @@ export const getRemainingLeavesByEmployee = async (req, res) => {
 
 export const getLeavesByStatusAndEmployee = async (req, res) => {
   const { employee_id, status } = req.query;
+  logger.info("Getting leaves by status and employee", {
+    employee_id,
+    status,
+  });
   try {
     if (!employee_id || !status) {
       throw new Error("Required Parameters Missing");
     }
 
     await getEmployeeById(employee_id);
-
+    logger.info("Employee found", { employee_id });
     const [leaveResults] = await connection.query(
       `SELECT * FROM leave_request WHERE employee_id = ? AND STATUS = ?`,
       [employee_id, status]
     );
 
     if (leaveResults.length === 0) {
+      logger.info("No leaves found for the given status and employee");
       return res
         .status(200)
         .json({ message: "No leaves found for the given status" });
@@ -266,6 +322,7 @@ export const getLeavesByStatusAndEmployee = async (req, res) => {
       leaves: leaveResults,
     });
   } catch (error) {
+    logger.error("Error getting leaves by status and employee:", error.message);
     res.status(500).json({
       error: error.message,
     });
@@ -274,12 +331,14 @@ export const getLeavesByStatusAndEmployee = async (req, res) => {
 
 export const getLeavesByEmployeeId = async (req, res) => {
   const { employee_id } = req.params;
+  logger.info("Getting leaves by employee ID", { employee_id });
   try {
     if (!employee_id) {
       throw new Error("Required Parameters Missing");
     }
 
     await getEmployeeById(employee_id);
+    logger.info("Employee found", { employee_id });
 
     const [leaveResults] = await connection.query(
       `SELECT * FROM leave_request WHERE employee_id = ?`,
@@ -287,15 +346,17 @@ export const getLeavesByEmployeeId = async (req, res) => {
     );
 
     if (leaveResults.length === 0) {
+      logger.info("No leaves found for the given employee");
       return res
         .status(200)
         .json({ message: "No leaves found for the given employee" });
     }
-
+    logger.info("Leaves found for employee", { employee_id });
     res.status(200).json({
       leaves: leaveResults,
     });
   } catch (error) {
+    logger.error("Error getting leaves by employee ID:", error.message);
     res.status(500).json({
       error: error.message,
     });
