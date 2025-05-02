@@ -16,21 +16,19 @@ export const login = async (req, res) => {
   );
   if (result.length === 0) {
     logger.warn("Login failed: User not found", { email });
-    return res.status(401).json({ message: "Invalid email or password" });
+    return res.status(401).json({ message: "Invalid Email or User Not found" });
   }
-  console.log(result[0]);
+
   const user = result[0];
 
   const isPasswordValid = await bcrypt.compare(password, user.password);
   if (!isPasswordValid) {
     logger.warn("Login failed: Incorrect password", { email });
-    return res.status(401).json({ message: "Invalid email or password" });
+    return res.status(401).json({ message: "Invalid Password" });
   }
 
   logger.info("Login successful", { email });
 
-  console.log("User");
-  console.log(user);
   const token = jwt.sign(
     { id: user.employee_id, email: user.email, role: user.role },
     process.env.SECRET_KEY,

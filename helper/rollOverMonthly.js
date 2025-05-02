@@ -55,8 +55,6 @@ export async function performLeaveRollover() {
         ]
       );
     }
-
-    console.log("Done");
   } catch (err) {
     console.error("Error in monthly leave rollover:", err);
   }

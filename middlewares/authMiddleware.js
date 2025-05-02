@@ -3,7 +3,7 @@ import logger from "../config/logger.js";
 import { query as connection } from "../config/database.js";
 export const requireAuth = async (req, res, next) => {
   const token = req.cookies.token;
-  console.log(token);
+
   if (!token) {
     logger.warn("No token provided, access denied");
     return res.status(403).json({ message: "Not Authorized" });
@@ -12,8 +12,7 @@ export const requireAuth = async (req, res, next) => {
   try {
     const result = jwt.verify(token, process.env.SECRET_KEY);
     const { id } = result;
-    console.log("Result");
-    console.log(result);
+
     if (!id) {
       logger.warn("Invalid token, access denied");
       return res.status(403).json({ message: "Not Authorized" });

@@ -13,7 +13,7 @@ export const checkAdmin = async (req, res, next) => {
     logger.info("Admin access granted for employee ID:", employee_id);
     next();
   } catch (error) {
-    console.error("Error checking employee:", error);
+    logger.error("Error checking employee:", error);
     res.status(500).json({ message: "Internal Server Error" });
   }
 };

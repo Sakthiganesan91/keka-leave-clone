@@ -1,6 +1,8 @@
 import express from "express";
 import dotenv from "dotenv";
 import cron from "node-cron";
+import cors from "cors";
+import helmet from "helmet";
 import cookieParser from "cookie-parser";
 import swaggerUI from "swagger-ui-express";
 
@@ -14,18 +16,32 @@ import { routes as employeeRoutes } from "./routes/employee.route.js";
 import { routes as leavePolicyRoutes } from "./routes/leavePolicy.route.js";
 import { routes as leaveRequestRoutes } from "./routes/leaveRequest.route.js";
 import { routes as authRoutes } from "./routes/authentication.route.js";
+import { apiLimiter, authLimiter } from "./util/rate-limiter.js";
 
 dotenv.config();
 const app = express();
+
+app.use(
+  cors({
+    origin: "*",
+    credentials: true,
+  })
+);
+
+app.use(
+  helmet({
+    crossOriginResourcePolicy: { policy: "cross-origin" },
+  })
+);
 
 app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.use("/auth", authRoutes);
-app.use("/employees", employeeRoutes);
-app.use("/leave-policies", leavePolicyRoutes);
-app.use("/leave-requests", leaveRequestRoutes);
+app.use("/auth", authLimiter, authRoutes);
+app.use("/employees", apiLimiter, employeeRoutes);
+app.use("/leave-policies", apiLimiter, leavePolicyRoutes);
+app.use("/leave-requests", apiLimiter, leaveRequestRoutes);
 
 app.use("/api-docs", swaggerUI.serve, swaggerUI.setup(swaggerSpec));
 
