@@ -1,5 +1,6 @@
 import { getEmployeeById } from "../controllers/employee.controller.js";
 
+//TODO : modify after implemnting authentication
 export const checkEmployee = async (req, res, next) => {
   let employee_id = req.params.employee_id || req.body.employee_id;
   if (!employee_id) {

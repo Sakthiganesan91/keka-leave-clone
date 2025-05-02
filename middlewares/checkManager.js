@@ -1,5 +1,6 @@
 import { query as connection } from "../database.js";
 
+//TODO : modify after implemnting authentication
 export const checkManager = async (req, res, next) => {
   try {
     if (role !== "manager") {

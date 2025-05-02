@@ -362,3 +362,39 @@ export const getLeavesByEmployeeId = async (req, res) => {
     });
   }
 };
+
+export const updateEmployeeStatus = async (req, res) => {
+  const { status } = req.body;
+  const employee_id = req.params.employee_id;
+  logger.info("Updating employee status", {
+    employee_id,
+    status,
+  });
+  try {
+    if (!status) {
+      logger.error("Status is required to update employee status");
+      return res.status(400).json({ message: "Status is required" });
+    }
+    if (!employee_id) {
+      logger.error("Employee ID is required to update status");
+      return res.status(400).json({ message: "Employee ID is required" });
+    }
+    if (status !== "active" && status !== "inactive") {
+      logger.error("Invalid status provided for employee update");
+      return res.status(400).json({ message: "Invalid status" });
+    }
+
+    await connection.query(
+      `UPDATE employee SET status = ? WHERE employee_id = ?`,
+      [status, employee_id]
+    );
+    logger.info("Employee status updated successfully", {
+      employee_id,
+      status,
+    });
+    res.status(200).json({ message: "Employee status updated successfully" });
+  } catch (error) {
+    logger.error(error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};

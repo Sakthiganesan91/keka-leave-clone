@@ -6,7 +6,9 @@ import {
   updateEmployee,
   getLeavesByEmployeeId,
   getLeavesByStatusAndEmployee,
+  updateEmployeeStatus,
 } from "../controllers/employee.controller.js";
+import logger from "../config/logger.js";
 
 const routes = express.Router();
 
@@ -201,5 +203,7 @@ routes.get("/get-leaves-by-status", getLeavesByStatusAndEmployee);
  *         description: Employee not found.
  */
 routes.get(`/get-leave-by-employee/:employee_id`, getLeavesByEmployeeId);
+
+routes.put("/update-employee-status/:employee_id", updateEmployeeStatus);
 
 export { routes };
