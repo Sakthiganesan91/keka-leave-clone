@@ -17,5 +17,6 @@ const pool = mysql
   })
   .on("error", (err) => {
     logger.error("MySQL pool error: ", err);
+    process.exit(1);
   });
 export const query = pool.promise();

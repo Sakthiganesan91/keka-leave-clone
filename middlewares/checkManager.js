@@ -1,24 +1,17 @@
-import { query as connection } from "../database.js";
+import logger from "../config/logger.js";
 
-//TODO : modify after implemnting authentication
 export const checkManager = async (req, res, next) => {
+  const employee_id = req.user.employee_id;
+  const role = req.user.role;
   try {
     if (role !== "manager") {
+      logger.warn("Access denied: User is not a manager", employee_id);
       return res.status(403).json({ message: "Access denied" });
     }
-
-    const [results] = await connection.query(
-      "SELECT * FROM employee WHERE employee_id = ?",
-      [employee_id]
-    );
-
-    if (results.length === 0) {
-      return res.status(404).json({ message: "Employee not found" });
-    }
-
+    logger.info("Manager access granted for employee ID:", employee_id);
     next();
   } catch (error) {
-    console.error("Error checking manager:", error);
+    logger.error("Error checking manager:", error);
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
