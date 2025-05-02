@@ -127,5 +127,3 @@ routes.put("/cancel-leave-request/:leave_id", cancelOrRejectLeaveRequest);
 routes.put("/approve-leave-request/:leave_id", acceptLeaveRequest);
 
 export { routes };
-
-//hello

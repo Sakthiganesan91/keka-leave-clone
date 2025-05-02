@@ -32,6 +32,9 @@ export const addEmployee = async (req, res) => {
     allowances,
   } = req.body;
 
+  if (!email || !name || !designation || !department || !basic_salary) {
+    return res.status(400).json({ message: "Required fields are missing" });
+  }
   try {
     const [results] = await connection.query(
       "INSERT INTO employee (email, name, designation, department, base_salary, max_approval_level, role, in_notice) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
@@ -71,11 +74,19 @@ export const addEmployee = async (req, res) => {
 
 export const setManager = async (req, res) => {
   const { employeeEmail, managerEmail } = req.query;
+
+  if (!employeeEmail || !managerEmail) {
+    return res.status(400).json({ message: "Required Parameters are missing" });
+  }
   try {
     const [manager_results] = await connection.query(
       "SELECT employee_id FROM employee WHERE email = ?",
       [managerEmail]
     );
+
+    if (manager_results.length === 0) {
+      return res.status(404).json({ message: "Manager not found" });
+    }
 
     const id = manager_results[0].employee_id;
 
@@ -106,6 +117,21 @@ export const updateEmployee = async (req, res) => {
   } = req.body;
 
   const { employee_id } = req.params;
+
+  if (!employee_id) {
+    return res.status(400).json({ message: "Employee ID is required" });
+  }
+  if (
+    !name ||
+    !designation ||
+    !department ||
+    !basic_salary ||
+    !max_approval_level ||
+    !role ||
+    in_notice === undefined
+  ) {
+    return res.status(400).json({ message: "Required fields are missing" });
+  }
 
   try {
     const [results] = await connection.query(
@@ -185,7 +211,7 @@ export const getRemainingLeavesByEmployee = async (req, res) => {
   const { leavepolicy_id, year } = req.query;
 
   if (!employee_id || !leavepolicy_id || !year) {
-    throw new Error("Required Fields Missing");
+    throw new Error("Required Parameters Missing");
   }
   try {
     const [leaveRemainingResult] = await connection.query(

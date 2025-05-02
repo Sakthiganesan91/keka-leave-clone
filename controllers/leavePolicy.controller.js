@@ -12,12 +12,32 @@ export const addLeavePolicy = async (req, res) => {
       approval_level_needed,
       max_days_per_month,
       not_approved_leave,
+      roll_over_allowed,
+      roll_over_count,
+      roll_over_monthly_allowed,
     } = req.body;
+
+    if (
+      !leave_type_name ||
+      !need_approval ||
+      !allow_half_day ||
+      !max_days_per_year ||
+      !paid ||
+      !deduct_salary ||
+      !approval_level_needed ||
+      !max_days_per_month ||
+      !not_approved_leave ||
+      !roll_over_allowed ||
+      !roll_over_count ||
+      !roll_over_monthly_allowed
+    ) {
+      return res.status(400).json({ message: "Required fields are missing" });
+    }
 
     const [result] = await connection.query(
       `INSERT INTO leavepolicy 
-       (leave_type_name, need_approval, allow_half_day, max_days_per_year, paid, deduct_salary, approval_level_needed, max_days_per_month, not_approved_leave)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       (leave_type_name, need_approval, allow_half_day, max_days_per_year, paid, deduct_salary, approval_level_needed, max_days_per_month, not_approved_leave, roll_over_allowed, roll_over_count, roll_over_monthly_allowed)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 
       [
         leave_type_name,
@@ -28,8 +48,10 @@ export const addLeavePolicy = async (req, res) => {
         deduct_salary,
         approval_level_needed,
         max_days_per_month,
-
         JSON.stringify(not_approved_leave),
+        roll_over_allowed,
+        roll_over_count,
+        roll_over_monthly_allowed,
       ]
     );
 
@@ -55,6 +77,10 @@ export const updateLeavePolicy = async (req, res) => {
       approval_level_needed,
       max_days_per_month,
       not_approved_leave,
+      roll_over_allowed,
+      roll_over_count,
+
+      roll_over_monthly_allowed,
     } = req.body;
 
     const { policy_id } = req.params;
@@ -69,7 +95,10 @@ export const updateLeavePolicy = async (req, res) => {
            deduct_salary = ?, 
            approval_level_needed = ?, 
            max_days_per_month = ?, 
-           not_approved_leave = ?
+           not_approved_leave = ?, 
+           roll_over_allowed = ?, 
+           roll_over_count = ?, 
+           roll_over_monthly_allowed = ?
        WHERE leavepolicy_id = ?`,
       [
         leave_type_name,
@@ -81,6 +110,9 @@ export const updateLeavePolicy = async (req, res) => {
         approval_level_needed,
         max_days_per_month,
         JSON.stringify(not_approved_leave),
+        roll_over_allowed,
+        roll_over_count,
+        roll_over_monthly_allowed,
         policy_id,
       ]
     );
