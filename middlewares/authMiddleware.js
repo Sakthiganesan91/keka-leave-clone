@@ -1,18 +1,21 @@
-const jwt = require("jsonwebtoken");
-const { default: logger } = require("../config/logger");
-
-const requireAuth = async (req, res, next) => {
-  const { authorization } = req.headers;
-
-  if (!authorization) {
-    return res.status(403).json({ message: "Auth Token Required" });
+import jwt from "jsonwebtoken";
+import logger from "../config/logger.js";
+import { query as connection } from "../config/database.js";
+export const requireAuth = async (req, res, next) => {
+  const token = req.cookies.token;
+  console.log(token);
+  if (!token) {
+    logger.warn("No token provided, access denied");
+    return res.status(403).json({ message: "Not Authorized" });
   }
 
-  const token = authorization.split(" ")[1];
-
   try {
-    const { id } = jwt.verify(token, process.env.SECRET_KEY);
+    const result = jwt.verify(token, process.env.SECRET_KEY);
+    const { id } = result;
+    console.log("Result");
+    console.log(result);
     if (!id) {
+      logger.warn("Invalid token, access denied");
       return res.status(403).json({ message: "Not Authorized" });
     }
     logger.info("Token verified successfully", id);
@@ -32,4 +35,3 @@ const requireAuth = async (req, res, next) => {
     res.status(403).json({ message: "Not Authorized" });
   }
 };
-module.exports = requireAuth;

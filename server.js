@@ -1,6 +1,7 @@
 import express from "express";
 import dotenv from "dotenv";
 import cron from "node-cron";
+import cookieParser from "cookie-parser";
 import swaggerUI from "swagger-ui-express";
 
 import { performLeaveRollover } from "./helper/rollOverMonthly.js";
@@ -12,13 +13,16 @@ import logger from "./config/logger.js";
 import { routes as employeeRoutes } from "./routes/employee.route.js";
 import { routes as leavePolicyRoutes } from "./routes/leavePolicy.route.js";
 import { routes as leaveRequestRoutes } from "./routes/leaveRequest.route.js";
+import { routes as authRoutes } from "./routes/authentication.route.js";
 
 dotenv.config();
 const app = express();
 
+app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+app.use("/auth", authRoutes);
 app.use("/employees", employeeRoutes);
 app.use("/leave-policies", leavePolicyRoutes);
 app.use("/leave-requests", leaveRequestRoutes);

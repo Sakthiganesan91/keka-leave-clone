@@ -1,6 +1,6 @@
-import logger from "../config/logger";
+import logger from "../config/logger.js";
 
-export const checkEmployee = async (req, res, next) => {
+export const checkAdmin = async (req, res, next) => {
   const employee_id = req.user.employee_id;
   const role = req.user.role;
   if (!employee_id) {

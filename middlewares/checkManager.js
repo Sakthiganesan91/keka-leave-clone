@@ -5,10 +5,18 @@ export const checkManager = async (req, res, next) => {
   const role = req.user.role;
   try {
     if (role !== "manager") {
-      logger.warn("Access denied: User is not a manager", employee_id);
-      return res.status(403).json({ message: "Access denied" });
+      if (role === "hr") {
+        return next();
+      }
+      logger.warn(
+        `Access denied: User with role ${role} is not a manager. Employee ID: ${employee_id}`
+      );
+      logger.warn(`Access denied: User is not a manager ${employee_id}`);
+      return res
+        .status(403)
+        .json({ message: "Access denied: Insufficient permissions" });
     }
-    logger.info("Manager access granted for employee ID:", employee_id);
+    logger.info(`Manager access granted for employee ID: ${employee_id}`);
     next();
   } catch (error) {
     logger.error("Error checking manager:", error);

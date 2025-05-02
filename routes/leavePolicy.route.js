@@ -4,6 +4,8 @@ import {
   updateLeavePolicy,
   getLeavePolicies,
 } from "../controllers/leavePolicy.controller.js";
+import { requireAuth } from "../middlewares/authMiddleware.js";
+import { checkAdmin } from "../middlewares/checkAdmin.js";
 
 const routes = express.Router();
 
@@ -48,7 +50,7 @@ const routes = express.Router();
  *       201:
  *         description: Leave policy added successfully.
  */
-routes.post("/add-policy", addLeavePolicy);
+routes.post("/add-policy", requireAuth, checkAdmin, addLeavePolicy);
 
 /**
  * @swagger
@@ -100,7 +102,12 @@ routes.post("/add-policy", addLeavePolicy);
  *       404:
  *         description: Leave policy not found.
  */
-routes.put("/update-policy/:policy_id", updateLeavePolicy);
+routes.put(
+  "/update-policy/:policy_id",
+  requireAuth,
+  checkAdmin,
+  updateLeavePolicy
+);
 
 /**
  * @swagger
@@ -155,6 +162,6 @@ routes.put("/update-policy/:policy_id", updateLeavePolicy);
  *                       roll_over_monthly_allowed:
  *                         type: integer
  */
-routes.get("/get-policies", getLeavePolicies);
+routes.get("/get-policies", requireAuth, getLeavePolicies);
 
 export { routes };

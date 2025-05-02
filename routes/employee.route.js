@@ -9,6 +9,8 @@ import {
   updateEmployeeStatus,
 } from "../controllers/employee.controller.js";
 import logger from "../config/logger.js";
+import { requireAuth } from "../middlewares/authMiddleware.js";
+import { checkAdmin } from "../middlewares/checkAdmin.js";
 
 const routes = express.Router();
 
@@ -50,7 +52,7 @@ const routes = express.Router();
  *       201:
  *         description: Employee added successfully.
  */
-routes.post("/add-employee", addEmployee);
+routes.post("/add-employee", requireAuth, checkAdmin, addEmployee);
 
 /**
  * @swagger
@@ -74,7 +76,7 @@ routes.post("/add-employee", addEmployee);
  *       201:
  *         description: Manager set successfully.
  */
-routes.post("/set-manager", setManager);
+routes.post("/set-manager", requireAuth, checkAdmin, setManager);
 
 /**
  * @swagger
@@ -115,7 +117,7 @@ routes.post("/set-manager", setManager);
  *       404:
  *         description: Employee not found.
  */
-routes.put("/update-employee/:employee_id", updateEmployee);
+routes.put("/update-employee/:employee_id", requireAuth, updateEmployee);
 
 /**
  * @swagger
@@ -154,7 +156,11 @@ routes.put("/update-employee/:employee_id", updateEmployee);
  *       404:
  *         description: Employee not found.
  */
-routes.get("/get-leave-remaining/:employee_id", getRemainingLeavesByEmployee);
+routes.get(
+  "/get-leave-remaining/:employee_id",
+  requireAuth,
+  getRemainingLeavesByEmployee
+);
 
 /**
  * @swagger
@@ -181,7 +187,7 @@ routes.get("/get-leave-remaining/:employee_id", getRemainingLeavesByEmployee);
  *       404:
  *         description: Employee not found.
  */
-routes.get("/get-leaves-by-status", getLeavesByStatusAndEmployee);
+routes.get("/get-leaves-by-status", requireAuth, getLeavesByStatusAndEmployee);
 
 /**
  * @swagger
@@ -202,8 +208,17 @@ routes.get("/get-leaves-by-status", getLeavesByStatusAndEmployee);
  *       404:
  *         description: Employee not found.
  */
-routes.get(`/get-leave-by-employee/:employee_id`, getLeavesByEmployeeId);
+routes.get(
+  `/get-leave-by-employee/:employee_id`,
+  requireAuth,
+  getLeavesByEmployeeId
+);
 
-routes.put("/update-employee-status/:employee_id", updateEmployeeStatus);
+routes.put(
+  "/update-employee-status/:employee_id",
+  requireAuth,
+  checkAdmin,
+  updateEmployeeStatus
+);
 
 export { routes };

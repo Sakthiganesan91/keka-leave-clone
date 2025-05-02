@@ -1,5 +1,6 @@
 import { query as connection } from "../config/database.js";
 import logger from "../config/logger.js";
+import bcrypt from "bcryptjs";
 
 const getEmployeeById = async (employee_id) => {
   try {
@@ -31,9 +32,17 @@ export const addEmployee = async (req, res) => {
     lop_deduction,
     performance_bonus,
     allowances,
+    password,
   } = req.body;
   logger.info("Adding employee", req.body);
-  if (!email || !name || !designation || !department || !basic_salary) {
+  if (
+    !email ||
+    !name ||
+    !designation ||
+    !department ||
+    !basic_salary ||
+    !password
+  ) {
     return res.status(400).json({ message: "Required fields are missing" });
   }
   try {
@@ -48,8 +57,10 @@ export const addEmployee = async (req, res) => {
         .json({ message: "Employee with this email already exists" });
     }
 
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
     const [results] = await connection.query(
-      "INSERT INTO employee (email, name, designation, department, base_salary, max_approval_level, role, in_notice) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+      "INSERT INTO employee (email, name, designation, department, base_salary, max_approval_level, role, in_notice,password) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
       [
         email,
         name,
@@ -59,6 +70,7 @@ export const addEmployee = async (req, res) => {
         max_approval_level,
         role,
         in_notice || 0,
+        hashedPassword,
       ]
     );
 
@@ -77,9 +89,14 @@ export const addEmployee = async (req, res) => {
       logger.error("Failed to create Employee");
       return res.status(500).json({ message: "Failed to add employee" });
     }
+
+    logger.info("Employee added successfully", {
+      employee_id: results.insertId,
+    });
     res.status(201).json({
       message: "Employee added successfully",
       employee_id: results.insertId,
+      token,
     });
   } catch (error) {
     logger.error("Error adding employee:", error.message);

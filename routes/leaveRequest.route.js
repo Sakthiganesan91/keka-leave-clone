@@ -5,7 +5,9 @@ import {
   getLeaveRequest,
   acceptLeaveRequest,
 } from "../controllers/leaveRequest.controller.js";
-
+import { requireAuth } from "../middlewares/authMiddleware.js";
+import { checkManager } from "../middlewares/checkManager.js";
+import { checkHR } from "../middlewares/checkHR.js";
 const routes = express.Router();
 
 /**
@@ -47,7 +49,7 @@ const routes = express.Router();
  *       201:
  *         description: Leave request raised successfully.
  */
-routes.post("/add-leave-request/:employee_id", raiseLeaveRequest);
+routes.post("/add-leave-request/:employee_id", requireAuth, raiseLeaveRequest);
 
 /**
  * @swagger
@@ -65,7 +67,13 @@ routes.post("/add-leave-request/:employee_id", raiseLeaveRequest);
  *       200:
  *         description: List of leave requests to be handled.
  */
-routes.get("/get-leave-request", getLeaveRequest);
+routes.get(
+  "/get-leave-request",
+  requireAuth,
+  checkManager,
+  checkHR,
+  getLeaveRequest
+);
 
 /**
  * @swagger
@@ -100,7 +108,13 @@ routes.get("/get-leave-request", getLeaveRequest);
  *       200:
  *         description: Leave request updated successfully.
  */
-routes.put("/cancel-leave-request/:leave_id", cancelOrRejectLeaveRequest);
+routes.put(
+  "/cancel-leave-request/:leave_id",
+  requireAuth,
+  checkManager,
+  checkHR,
+  cancelOrRejectLeaveRequest
+);
 
 /**
  * @swagger
@@ -124,6 +138,12 @@ routes.put("/cancel-leave-request/:leave_id", cancelOrRejectLeaveRequest);
  *       200:
  *         description: Leave request approved successfully.
  */
-routes.put("/approve-leave-request/:leave_id", acceptLeaveRequest);
+routes.put(
+  "/approve-leave-request/:leave_id",
+  requireAuth,
+  checkManager,
+  checkHR,
+  acceptLeaveRequest
+);
 
 export { routes };
