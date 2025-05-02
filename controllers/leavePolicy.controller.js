@@ -18,18 +18,15 @@ export const addLeavePolicy = async (req, res) => {
     } = req.body;
 
     if (
-      !leave_type_name ||
-      !need_approval ||
-      !allow_half_day ||
-      !max_days_per_year ||
-      !paid ||
-      !deduct_salary ||
-      !approval_level_needed ||
-      !max_days_per_month ||
-      !not_approved_leave ||
-      !roll_over_allowed ||
-      !roll_over_count ||
-      !roll_over_monthly_allowed
+      leave_type_name == null ||
+      need_approval == null ||
+      allow_half_day == null ||
+      paid == null ||
+      deduct_salary == null ||
+      approval_level_needed == null ||
+      roll_over_allowed == null ||
+      roll_over_count == null ||
+      roll_over_monthly_allowed == null
     ) {
       return res.status(400).json({ message: "Required fields are missing" });
     }
@@ -82,6 +79,20 @@ export const updateLeavePolicy = async (req, res) => {
 
       roll_over_monthly_allowed,
     } = req.body;
+
+    if (
+      leave_type_name == null ||
+      need_approval == null ||
+      allow_half_day == null ||
+      paid == null ||
+      deduct_salary == null ||
+      approval_level_needed == null ||
+      roll_over_allowed == null ||
+      roll_over_count == null ||
+      roll_over_monthly_allowed == null
+    ) {
+      return res.status(400).json({ message: "Required fields are missing" });
+    }
 
     const { policy_id } = req.params;
 

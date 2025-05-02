@@ -914,8 +914,8 @@ export const cancelOrRejectLeaveRequest = async (req, res) => {
 
     const [updated_results] = await connection.query(
       `
-    UPDATE leave_request SET cancellation_comment = ?, cancelled_by = ?, status = ?, status_updated_at= CURRENT_TIMESTAMP() where leave_id = ? and (approver_id= ? or employee_id=? or ? = (SELECT manager_id from employee where employee_id = ?));`,
-      [cancellation_comment, id, status, leave_id, id, id, id, employeeId]
+    UPDATE leave_request SET cancellation_comment = ?, cancelled_by = ?, status = ?, approver_id = ?, status_updated_at= CURRENT_TIMESTAMP() where leave_id = ? and (approver_id= ? or employee_id=? or ? = (SELECT manager_id from employee where employee_id = ?));`,
+      [cancellation_comment, id, status, id, leave_id, id, id, id, employeeId]
     );
 
     res.status(200).json({

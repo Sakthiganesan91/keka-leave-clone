@@ -37,6 +37,12 @@ const routes = express.Router();
  *                 type: integer
  *               not_approved_leave:
  *                 type: object
+ *               roll_over_allowed:
+ *                 type: boolean
+ *               roll_over_count:
+ *                 type: integer
+ *               roll_over_monthly_allowed:
+ *                 type: boolean
  *
  *     responses:
  *       201:
@@ -81,6 +87,12 @@ routes.post("/add-policy", addLeavePolicy);
  *                 type: integer
  *               not_approved_leave:
  *                 type: object
+ *               roll_over_allowed:
+ *                 type: boolean
+ *               roll_over_count:
+ *                 type: integer
+ *               roll_over_monthly_allowed:
+ *                 type: boolean
  *
  *     responses:
  *       200:
@@ -115,21 +127,33 @@ routes.put("/update-policy/:policy_id", updateLeavePolicy);
  *                       leave_type_name:
  *                         type: string
  *                       need_approval:
- *                         type: boolean
+ *                         type: integer
  *                       allow_half_day:
- *                         type: boolean
+ *                         type: integer
  *                       max_days_per_year:
  *                         type: integer
+ *                         nullable: true
  *                       paid:
- *                         type: boolean
+ *                         type: integer
  *                       deduct_salary:
- *                         type: boolean
+ *                         type: integer
  *                       approval_level_needed:
  *                         type: integer
  *                       max_days_per_month:
  *                         type: integer
+ *                         nullable: true
+ *                       policy_date:
+ *                         type: string
+ *                         format: date-time
  *                       not_approved_leave:
  *                         type: string
+ *                         nullable: true
+ *                       roll_over_allowed:
+ *                         type: integer
+ *                       roll_over_count:
+ *                         type: integer
+ *                       roll_over_monthly_allowed:
+ *                         type: integer
  */
 routes.get("/get-policies", getLeavePolicies);
 

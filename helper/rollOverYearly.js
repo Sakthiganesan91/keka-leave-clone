@@ -1,4 +1,4 @@
-import { query as db } from "./database.js";
+import { query as db } from "../database.js";
 
 export async function performYearlyLeaveRollover() {
   const today = new Date();

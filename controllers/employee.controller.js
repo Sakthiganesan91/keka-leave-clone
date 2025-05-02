@@ -80,12 +80,18 @@ export const setManager = async (req, res) => {
   }
   try {
     const [manager_results] = await connection.query(
-      "SELECT employee_id FROM employee WHERE email = ?",
+      "SELECT employee_id,role FROM employee WHERE email = ?",
       [managerEmail]
     );
-
-    if (manager_results.length === 0) {
-      return res.status(404).json({ message: "Manager not found" });
+    console.log(manager_results[0].role);
+    if (
+      manager_results.length === 0 ||
+      (manager_results[0].role !== "manager" &&
+        manager_results[0].role !== "hr")
+    ) {
+      return res
+        .status(404)
+        .json({ message: "Manager not found or Invalid role for assignment" });
     }
 
     const id = manager_results[0].employee_id;
@@ -160,7 +166,7 @@ export const updateEmployee = async (req, res) => {
       return res.status(404).json({ message: "Employee not found" });
     }
 
-    res.status(200).json({
+    res.status(204).json({
       message: "Employee updated successfully",
     });
   } catch (error) {
@@ -218,7 +224,12 @@ export const getRemainingLeavesByEmployee = async (req, res) => {
       `SELECT leave_remaining FROM employee_leave_yearly WHERE  leavepolicy_id = ? AND employee_id = ? AND year = ?`,
       [leavepolicy_id, employee_id, year]
     );
-    console.log(leaveRemainingResult);
+
+    if (leaveRemainingResult.length === 0) {
+      return res.status(201).json({
+        message: "No Leave Taken for the particular year",
+      });
+    }
     const leaveRemaining = leaveRemainingResult[0].leave_remaining;
 
     res.status(200).json({
@@ -247,7 +258,7 @@ export const getLeavesByStatusAndEmployee = async (req, res) => {
 
     if (leaveResults.length === 0) {
       return res
-        .status(404)
+        .status(200)
         .json({ message: "No leaves found for the given status" });
     }
 
@@ -277,7 +288,7 @@ export const getLeavesByEmployeeId = async (req, res) => {
 
     if (leaveResults.length === 0) {
       return res
-        .status(404)
+        .status(200)
         .json({ message: "No leaves found for the given employee" });
     }
 
