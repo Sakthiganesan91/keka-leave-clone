@@ -4,6 +4,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 export const login = async (req, res) => {
   const { email, password } = req.body;
+
   if (!email || !password) {
     return res.status(400).json({ message: "Email and password are required" });
   }
@@ -32,9 +33,53 @@ export const login = async (req, res) => {
   const token = jwt.sign(
     { id: user.employee_id, email: user.email, role: user.role },
     process.env.SECRET_KEY,
-    { expiresIn: "1h" }
+    { expiresIn: "4h" }
   );
 
   res.cookie("token", token, { httpOnly: true });
-  res.status(200).json({ message: "Login successful", token });
+  res.status(200).json({ message: "Login successful", token, user: result[0] });
+};
+
+export const logout = async (req, res) => {
+  try {
+    res.clearCookie("token", {
+      httpOnly: true,
+    });
+    return res.status(200).json({ message: "Logged out" });
+  } catch (error) {
+    return res.status(500).json(error);
+  }
+};
+
+export const verifyToken = async (req, res) => {
+  try {
+    const token = req.cookies.token;
+
+    const result = jwt.verify(token, process.env.SECRET_KEY);
+
+    const { id } = result;
+
+    if (!id) {
+      logger.warn("Invalid token, access denied");
+      return res.status(403).json({ message: "Not Authorized" });
+    }
+    logger.info("Token verified successfully", id);
+    const [results] = await connection.query(
+      `SELECT * FROM employee WHERE employee_id = ?`,
+      [id]
+    );
+    if (results.length === 0) {
+      return res.status(403).json({ message: "Not Authorized" });
+    }
+    req.user = results[0];
+    logger.info("User authenticated successfully", req.user);
+
+    return res.status(201).json({
+      tokenValid: true,
+    });
+  } catch (error) {
+    return res.status(403).json({
+      tokenValid: false,
+    });
+  }
 };

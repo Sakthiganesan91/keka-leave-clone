@@ -152,13 +152,15 @@ export const updateLeavePolicy = async (req, res) => {
 
 export const getLeavePolicies = async (req, res) => {
   try {
-    logger.info("Fetching leave policies");
-    const [results] = await connection.query(`SELECT * FROM leavepolicy`);
+    logger.info("Fetching leave policies id");
+    const [results] = await connection.query(
+      `SELECT leavepolicy_id FROM leavepolicy ORDER BY leavepolicy_id`
+    );
     if (results.length === 0) {
       logger.info("No leave policies found");
       return res.status(404).json({ message: "No leave policies found" });
     }
-    logger.info("Leave policies fetched successfully", results);
+    logger.info("Leave policies id fetched successfully", results);
     res.status(200).json({
       message: "Leave policies fetched successfully",
       policies: results,

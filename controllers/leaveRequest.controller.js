@@ -344,7 +344,6 @@ const createLeaveRequest = async ({
   end_date,
   noofdays,
   is_half_day,
-  half_day_type,
   leave_reason,
   status,
   leaveType,
@@ -358,14 +357,13 @@ const createLeaveRequest = async ({
       end_date,
       noofdays,
       is_half_day,
-      half_day_type,
       leave_reason,
       status,
       leave_type,
       current_level,
       approver_id,
       leave_month
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, MONTH(CURRENT_DATE()))`,
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, MONTH(CURRENT_DATE()))`,
     [
       employeeId,
       leavePolicy.leavepolicy_id,
@@ -373,7 +371,6 @@ const createLeaveRequest = async ({
       end_date,
       noofdays,
       is_half_day,
-      half_day_type,
       leave_reason,
       status,
       leaveType,
@@ -778,21 +775,23 @@ export const raiseLeaveRequest = async (req, res) => {
     noofdays,
     leave_reason,
     is_half_day,
-    half_day_type,
   } = req.body;
-
+  console.log("Employee Leave Start Date and End Date");
+  console.log(start_date, end_date);
   try {
     if (!employeeId) throw Error("Employee ID is required");
 
     const [employeeDetails] = await connection.query(
-      `SELECT in_notice FROM employee WHERE employee_id = ?`,
+      `SELECT in_notice,manager_id FROM employee WHERE employee_id = ?`,
       [employeeId]
     );
 
     if (employeeDetails[0]?.in_notice) {
       throw Error("Employees in their notice period cannot apply for leave");
     }
-
+    if (!employeeDetails[0]?.manager_id) {
+      throw Error("Manager Not Set");
+    }
     if (isWeekend(start_date) || isWeekend(end_date)) {
       throw Error("Leave cannot be applied for weekends (Saturday or Sunday)");
     }
@@ -825,7 +824,7 @@ export const raiseLeaveRequest = async (req, res) => {
       is_half_day
     );
 
-    let status = leaveType.toLowerCase() === "sick" ? "accepted" : "pending";
+    let status = leaveType.toLowerCase() === "sick" ? "approved" : "pending";
 
     const leaveId = await createLeaveRequest({
       employeeId,
@@ -834,7 +833,7 @@ export const raiseLeaveRequest = async (req, res) => {
       end_date,
       noofdays,
       is_half_day,
-      half_day_type,
+
       leave_reason,
       status,
       leaveType,
@@ -869,9 +868,12 @@ export const raiseLeaveRequest = async (req, res) => {
 export const getLeaveRequest = async (req, res) => {
   const { manager_id } = req.query;
 
+  if (!manager_id) {
+    throw Error("Manager id not found");
+  }
   try {
     const [leave_request_results] = await connection.query(
-      `SELECT * from leave_request where approver_id = ? and status='pending'`,
+      `SELECT L.*,E.name,E.designation from leave_request L join employee E on l.employee_id = E.employee_id where L.approver_id = ? and L.status='pending'`,
       [manager_id]
     );
 
@@ -931,7 +933,7 @@ export const cancelOrRejectLeaveRequest = async (req, res) => {
 export const acceptLeaveRequest = async (req, res) => {
   const leave_id = req.params.leave_id;
   const { id } = req.query;
-
+  console.log(leave_id, id);
   try {
     const [leaveRequest] = await connection.query(
       `SELECT leavepolicy_id, current_level, start_date, end_date, employee_id, leave_type, noofdays 

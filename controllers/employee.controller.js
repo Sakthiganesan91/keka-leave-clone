@@ -96,7 +96,6 @@ export const addEmployee = async (req, res) => {
     res.status(201).json({
       message: "Employee added successfully",
       employee_id: results.insertId,
-      token,
     });
   } catch (error) {
     logger.error("Error adding employee:", error.message);
@@ -274,6 +273,7 @@ export const getRemainingLeavesByEmployee = async (req, res) => {
   const { employee_id } = req.params;
 
   const { leavepolicy_id, year } = req.query;
+
   logger.info("Getting remaining leaves for employee", {
     employee_id,
     leavepolicy_id,
@@ -284,23 +284,24 @@ export const getRemainingLeavesByEmployee = async (req, res) => {
   }
   try {
     const [leaveRemainingResult] = await connection.query(
-      `SELECT leave_remaining FROM employee_leave_yearly WHERE  leavepolicy_id = ? AND employee_id = ? AND year = ?`,
+      `SELECT ELY.leave_remaining,ELY.leave_taken,ELY.leave_allocated,L.leave_type_name FROM employee_leave_yearly ELY JOIN leavepolicy L on L.leavepolicy_id = ELY.leavepolicy_id WHERE  ELY.leavepolicy_id = ? AND ELY.employee_id = ? AND ELY.year = ?`,
       [leavepolicy_id, employee_id, year]
     );
-
+    console.log(leaveRemainingResult);
     if (leaveRemainingResult.length === 0) {
       logger.info("No leave taken for the particular year");
       return res.status(201).json({
+        leaveRemaining: [],
         message: "No Leave Taken for the particular year",
       });
     }
-    const leaveRemaining = leaveRemainingResult[0].leave_remaining;
+    const leaveRemaining = leaveRemainingResult;
     logger.info("Leave remaining for employee", {
       employee_id,
       leaveRemaining,
     });
     res.status(200).json({
-      leaveRemaining,
+      leaveRemaining: leaveRemaining[0],
     });
   } catch (error) {
     logger.error("Error getting remaining leaves:", error.message);
@@ -324,7 +325,30 @@ export const getLeavesByStatusAndEmployee = async (req, res) => {
     await getEmployeeById(employee_id);
     logger.info("Employee found", { employee_id });
     const [leaveResults] = await connection.query(
-      `SELECT * FROM leave_request WHERE employee_id = ? AND STATUS = ?`,
+      `
+        SELECT 
+  lr.leave_id,
+  lr.leavepolicy_id,
+  lr.start_date,
+  lr.end_date,
+  lr.noofdays,
+  lr.leave_reason,
+  lr.cancellation_comment,
+  lr.cancelled_by,
+  lr.approver_id,
+  approver.name AS manager_name,
+  lr.status,
+  lr.status_updated_at,
+  lr.applied_on,
+  lr.leave_type,
+  lr.current_level,
+  requester.name AS requested_name
+FROM leave_request lr
+JOIN employee approver ON lr.approver_id = approver.employee_id
+JOIN employee requester ON lr.employee_id = requester.employee_id
+WHERE lr.employee_id = ? AND lr.status = ?
+
+      `,
       [employee_id, status]
     );
 
@@ -332,7 +356,7 @@ export const getLeavesByStatusAndEmployee = async (req, res) => {
       logger.info("No leaves found for the given status and employee");
       return res
         .status(200)
-        .json({ message: "No leaves found for the given status" });
+        .json({ message: "No leaves found for the given status", leaves: [] });
     }
 
     res.status(200).json({
@@ -358,19 +382,23 @@ export const getLeavesByEmployeeId = async (req, res) => {
     logger.info("Employee found", { employee_id });
 
     const [leaveResults] = await connection.query(
-      `SELECT * FROM leave_request WHERE employee_id = ?`,
-      [employee_id]
+      `SELECT L.*,E.* FROM leave_request L join employee E on L.employee_id=? WHERE E.employee_id = ?`,
+      [employee_id, employee_id]
     );
 
     if (leaveResults.length === 0) {
       logger.info("No leaves found for the given employee");
-      return res
-        .status(200)
-        .json({ message: "No leaves found for the given employee" });
+      return res.status(200).json({
+        success: true,
+        message: "No leaves found for the given employee",
+        leaves: [],
+      });
     }
     logger.info("Leaves found for employee", { employee_id });
     res.status(200).json({
+      success: true,
       leaves: leaveResults,
+      message: "Leaves fetched Successfully",
     });
   } catch (error) {
     logger.error("Error getting leaves by employee ID:", error.message);
@@ -413,5 +441,234 @@ export const updateEmployeeStatus = async (req, res) => {
   } catch (error) {
     logger.error(error);
     res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+const organizeLeaveData = (leaves) => {
+  const leaveData = leaves.map((l) => ({
+    id: l.leave_id,
+    title: `${l.leave_type} Leave - ${l.name}`,
+    start: l.start_date,
+    end: l.end_date,
+    type: l.leave_type.toLowerCase(),
+    isHalfDay: !!l.is_half_day,
+    status: l.status,
+    reason: l.leave_reason,
+    employee: {
+      id: l.employee_id,
+      name: l.name,
+      role: l.role,
+      email: l.email,
+      department: l.department,
+      designation: l.designation,
+    },
+  }));
+  return leaveData;
+};
+
+export const getTeamLeaves = async (req, res) => {
+  try {
+    const { employeeIdSearch } = req.query;
+    console.log(employeeIdSearch);
+
+    let managerQuery = `
+    SELECT L.*, E.name, E.role,E.employee_id,E.email,E.department ,E.designation FROM leave_request L
+JOIN employee E ON L.employee_id = E.employee_id
+WHERE E.manager_id = ?
+    `;
+    let employeeQuery = `
+    SELECT L.*, E.name,E.designation, E.role,E.employee_id,E.email,E.department,E.manager_id FROM leave_request L
+JOIN employee E ON L.employee_id = E.employee_id
+WHERE E.manager_id = (SELECT manager_id FROM employee WHERE employee_id = ?)
+    `;
+
+    if (employeeIdSearch && parseInt(employeeIdSearch) !== 0) {
+      let search = ` AND E.employee_id = ${parseInt(employeeIdSearch)}`;
+      managerQuery += search;
+      employeeQuery += search;
+    }
+
+    if (!req.user) {
+      throw Error("User not found");
+    }
+    const employee_id = req.user.employee_id;
+    const role = req.user.role;
+
+    if (!employee_id || !role) throw Error("Access Not Allowed");
+
+    if (role === "manager") {
+      const [leave_results] = await connection.query(managerQuery, [
+        employee_id,
+      ]);
+      if (leave_results.length === 0) {
+        return res.status(200).json({
+          leaveData: [],
+        });
+      }
+      const leaveData = organizeLeaveData(leave_results);
+      return res.status(200).json({
+        leaveData,
+      });
+    }
+    if (role === "employee") {
+      const [leave_results] = await connection.query(employeeQuery, [
+        employee_id,
+      ]);
+
+      if (leave_results.length === 0) {
+        return res.status(200).json({
+          leaveData: [],
+        });
+      }
+      const leaveData = organizeLeaveData(leave_results);
+
+      return res.status(200).json({
+        leaveData,
+      });
+    }
+
+    return res.status(200).json({
+      leaveData: [],
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      error: error.message,
+    });
+  }
+};
+
+export const getTeamEmployees = async (req, res) => {
+  try {
+    const { search, role: searchRole, department } = req.query;
+    console.log(req.query);
+
+    let managerSearchQuery = ` SELECT  name, role,employee_id,email,department ,designation FROM employee 
+    WHERE manager_id = ?`;
+    let employeeSearchQuery = `   SELECT  name,designation, role,employee_id,email,department,manager_id FROM employee
+    WHERE manager_id = (SELECT manager_id FROM employee WHERE employee_id = ?)`;
+
+    if (search) {
+      managerSearchQuery = managerSearchQuery + ` AND name LIKE '%${search}%'`;
+      employeeSearchQuery =
+        employeeSearchQuery + ` AND name LIKE '%${search}%'`;
+    }
+    if (searchRole && searchRole !== "all") {
+      managerSearchQuery += ` AND role='${searchRole}'`;
+      employeeSearchQuery += ` AND role='${searchRole}'`;
+    }
+    if (department && department !== "all") {
+      managerSearchQuery += ` AND department='${department}'`;
+      employeeSearchQuery += ` AND department='${department}'`;
+    }
+    if (!req.user) {
+      throw Error("User not found");
+    }
+    const employee_id = req.user.employee_id;
+    const role = req.user.role;
+
+    if (!employee_id || !role) throw Error("Access Not Allowed");
+
+    if (role === "manager") {
+      const [employee_results] = await connection.query(managerSearchQuery, [
+        employee_id,
+      ]);
+
+      return res.status(200).json({
+        employee_results,
+      });
+    }
+    if (role === "employee") {
+      const [employee_results] = await connection.query(employeeSearchQuery, [
+        employee_id,
+      ]);
+
+      return res.status(200).json({
+        employee_results,
+      });
+    }
+
+    return res.status(200).json({
+      employee_results: [],
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      error: error.message,
+    });
+  }
+};
+
+export const getRoles = async (req, res) => {
+  try {
+    const [role_results] = await connection.query(`
+    SELECT DISTINCT(role) FROM employee;
+    `);
+    console.log(role_results);
+
+    res.status(200).json({
+      roles: role_results,
+    });
+  } catch (error) {
+    res.status(500).json({
+      error: error.message,
+    });
+  }
+};
+
+export const getDepartments = async (req, res) => {
+  try {
+    const [department_results] = await connection.query(`
+    SELECT DISTINCT(department) FROM employee;
+    `);
+
+    res.status(200).json({
+      departments: department_results,
+    });
+  } catch (error) {
+    res.status(500).json({
+      error: error.message,
+    });
+  }
+};
+
+export const getLeavesByEmployeeByMonth = async (req, res) => {
+  const { employee_id } = req.params;
+
+  const { year } = req.query;
+
+  logger.info("Getting remaining leaves for employee", {
+    employee_id,
+    year,
+  });
+  if (!employee_id || !year) {
+    throw new Error("Required Parameters Missing");
+  }
+  try {
+    const [leaveRemainingResult] = await connection.query(
+      ` select sum(leave_taken_month) as Leave_Taken,month from employee_leave where employee_id = ? and year = ? group by month;`,
+      [employee_id, year]
+    );
+    console.log(leaveRemainingResult);
+    if (leaveRemainingResult.length === 0) {
+      logger.info("No leave taken for the particular year");
+      return res.status(201).json({
+        leaveRemaining: [],
+        message: "No Leave Taken for the particular year",
+      });
+    }
+    const leaveRemaining = leaveRemainingResult;
+    logger.info("Leave remaining for employee", {
+      employee_id,
+      leaveRemaining,
+    });
+    res.status(200).json({
+      leaveRemaining: leaveRemaining,
+    });
+  } catch (error) {
+    logger.error("Error getting remaining leaves:", error.message);
+    res.status(500).json({
+      error: error.message,
+    });
   }
 };

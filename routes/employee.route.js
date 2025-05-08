@@ -7,6 +7,11 @@ import {
   getLeavesByEmployeeId,
   getLeavesByStatusAndEmployee,
   updateEmployeeStatus,
+  getTeamLeaves,
+  getTeamEmployees,
+  getRoles,
+  getDepartments,
+  getLeavesByEmployeeByMonth,
 } from "../controllers/employee.controller.js";
 import logger from "../config/logger.js";
 import { requireAuth } from "../middlewares/authMiddleware.js";
@@ -221,4 +226,16 @@ routes.put(
   updateEmployeeStatus
 );
 
+routes.get("/get-team-leaves", requireAuth, getTeamLeaves);
+
+routes.get("/get-team-employees", requireAuth, getTeamEmployees);
+
+routes.get("/get-roles", requireAuth, getRoles);
+routes.get("/get-departments", requireAuth, getDepartments);
+
+routes.get(
+  "/get-leave-remaining-by-month/:employee_id",
+  requireAuth,
+  getLeavesByEmployeeByMonth
+);
 export { routes };

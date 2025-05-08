@@ -111,8 +111,6 @@ routes.get(
 routes.put(
   "/cancel-leave-request/:leave_id",
   requireAuth,
-  checkManager,
-  checkHR,
   cancelOrRejectLeaveRequest
 );
 

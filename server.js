@@ -23,7 +23,7 @@ const app = express();
 
 app.use(
   cors({
-    origin: "*",
+    origin: "http://localhost:5173",
     credentials: true,
   })
 );
@@ -38,7 +38,8 @@ app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.use("/auth", authLimiter, authRoutes);
+// app.use("/auth", authLimiter, authRoutes);
+app.use("/auth", authRoutes);
 app.use("/employees", apiLimiter, employeeRoutes);
 app.use("/leave-policies", apiLimiter, leavePolicyRoutes);
 app.use("/leave-requests", apiLimiter, leaveRequestRoutes);
