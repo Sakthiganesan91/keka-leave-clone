@@ -33,6 +33,7 @@ export const addEmployee = async (req, res) => {
     performance_bonus,
     allowances,
     password,
+    phone_number,
   } = req.body;
   logger.info("Adding employee", req.body);
   if (
@@ -60,7 +61,7 @@ export const addEmployee = async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
     const [results] = await connection.query(
-      "INSERT INTO employee (email, name, designation, department, base_salary, max_approval_level, role, in_notice,password) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+      "INSERT INTO employee (email, name, designation, department, base_salary, max_approval_level, role, in_notice,password,phone_number) VALUES (?, ?, ?, ?,?, ?, ?, ?, ?, ?)",
       [
         email,
         name,
@@ -71,6 +72,7 @@ export const addEmployee = async (req, res) => {
         role,
         in_notice || 0,
         hashedPassword,
+        phone_number,
       ]
     );
 

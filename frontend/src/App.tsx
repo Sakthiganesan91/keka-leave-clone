@@ -10,6 +10,7 @@ import CalendarPage from "./Pages/Home/CalendarPage.tsx";
 import { highLevelAuthors } from "./lib/utils.ts";
 import ApproveLeave from "./Pages/Home/ApproveLeave.tsx";
 import ViewTeam from "./Pages/Home/ViewTeam.tsx";
+import EmployeeSection from "./Pages/admin/EmployeeSection.tsx";
 function App() {
   const { user } = useAuth();
 
@@ -56,7 +57,7 @@ function App() {
 
           {user && user?.role === "admin" && (
             <>
-              <Route path="/create-employee" element={<>Hello</>} />
+              <Route path="/create-employee" element={<EmployeeSection />} />
             </>
           )}
           <Route

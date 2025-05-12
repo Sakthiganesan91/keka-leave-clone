@@ -893,7 +893,7 @@ export const cancelOrRejectLeaveRequest = async (req, res) => {
 
   try {
     const [leave_request_results] = await connection.query(
-      `SELECT leavepolicy_id,employee_id,start_date,end_date from leave_request where leave_id = ?;`,
+      `SELECT leavepolicy_id,employee_id,start_date,end_date,status from leave_request where leave_id = ?;`,
       [leave_id]
     );
 
@@ -907,12 +907,14 @@ export const cancelOrRejectLeaveRequest = async (req, res) => {
     );
 
     const leavePolicyId = leave_request_results[0].leavepolicy_id;
-    await updateEmployeeLeaveAfterCancellationOrRejection(
-      employeeId,
-      leavePolicyId,
-      start_date,
-      end_date
-    );
+    if (leave_request_results[0].status !== "pending") {
+      await updateEmployeeLeaveAfterCancellationOrRejection(
+        employeeId,
+        leavePolicyId,
+        start_date,
+        end_date
+      );
+    }
 
     const [updated_results] = await connection.query(
       `
