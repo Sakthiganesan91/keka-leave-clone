@@ -5,7 +5,7 @@ export const checkManager = async (req, res, next) => {
   const role = req.user.role;
   try {
     if (role !== "manager") {
-      if (role === "hr") {
+      if (role === "hr" || role === "admin") {
         return next();
       }
       logger.warn(

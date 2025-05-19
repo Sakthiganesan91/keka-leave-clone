@@ -25,6 +25,7 @@ export const requireAuth = async (req, res, next) => {
     if (results.length === 0) {
       return res.status(403).json({ message: "Not Authorized" });
     }
+
     req.user = results[0];
     logger.info("User authenticated successfully", req.user);
 

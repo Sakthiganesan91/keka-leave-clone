@@ -8,6 +8,7 @@ import {
 import { requireAuth } from "../middlewares/authMiddleware.js";
 import { checkManager } from "../middlewares/checkManager.js";
 import { checkHR } from "../middlewares/checkHR.js";
+import { checkAdmin } from "../middlewares/checkAdmin.js";
 const routes = express.Router();
 
 /**

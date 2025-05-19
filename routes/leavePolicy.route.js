@@ -3,6 +3,8 @@ import {
   addLeavePolicy,
   updateLeavePolicy,
   getLeavePolicies,
+  getLeavePoliciesData,
+  deleteLeavePolicy,
 } from "../controllers/leavePolicy.controller.js";
 import { requireAuth } from "../middlewares/authMiddleware.js";
 import { checkAdmin } from "../middlewares/checkAdmin.js";
@@ -163,5 +165,18 @@ routes.put(
  *                         type: integer
  */
 routes.get("/get-policies", requireAuth, getLeavePolicies);
+
+routes.get(
+  "/get-leave-policies-data",
+  requireAuth,
+  checkAdmin,
+  getLeavePoliciesData
+);
+
+routes.delete(
+  "/delete-policies/:leavepolicyId",
+  requireAuth,
+  deleteLeavePolicy
+);
 
 export { routes };

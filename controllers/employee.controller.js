@@ -2,7 +2,7 @@ import { query as connection } from "../config/database.js";
 import logger from "../config/logger.js";
 import bcrypt from "bcryptjs";
 
-const getEmployeeById = async (employee_id) => {
+export const getEmployeeById = async (employee_id) => {
   try {
     const [results] = await connection.query(
       "SELECT * FROM employee WHERE employee_id = ?",
@@ -20,28 +20,34 @@ const getEmployeeById = async (employee_id) => {
 };
 
 export const addEmployee = async (req, res) => {
-  const {
+  let {
     email,
     name,
     designation,
     department,
-    basic_salary,
+    basicSalary,
     max_approval_level,
     role,
     in_notice,
     lop_deduction,
-    performance_bonus,
+    performanceBonus,
     allowances,
     password,
     phone_number,
   } = req.body;
+  lop_deduction = parseInt(lop_deduction);
+  allowances = parseInt(allowances);
+  in_notice = in_notice === "" ? 0 : 1;
+  let basic_salary = parseInt(basicSalary);
+  let performance_bonus = parseInt(performanceBonus);
+
   logger.info("Adding employee", req.body);
   if (
     !email ||
     !name ||
     !designation ||
     !department ||
-    !basic_salary ||
+    basic_salary === null ||
     !password
   ) {
     return res.status(400).json({ message: "Required fields are missing" });
@@ -289,7 +295,7 @@ export const getRemainingLeavesByEmployee = async (req, res) => {
       `SELECT ELY.leave_remaining,ELY.leave_taken,ELY.leave_allocated,L.leave_type_name FROM employee_leave_yearly ELY JOIN leavepolicy L on L.leavepolicy_id = ELY.leavepolicy_id WHERE  ELY.leavepolicy_id = ? AND ELY.employee_id = ? AND ELY.year = ?`,
       [leavepolicy_id, employee_id, year]
     );
-    console.log(leaveRemainingResult);
+
     if (leaveRemainingResult.length === 0) {
       logger.info("No leave taken for the particular year");
       return res.status(201).json({
@@ -471,23 +477,26 @@ const organizeLeaveData = (leaves) => {
 export const getTeamLeaves = async (req, res) => {
   try {
     const { employeeIdSearch } = req.query;
-    console.log(employeeIdSearch);
+
+    let adminQuery = `SELECT L.*, E.name, E.role,E.employee_id,E.email,E.department ,E.designation FROM leave_request L
+JOIN employee E ON L.employee_id = E.employee_id WHERE (L.status NOT LIKE '%cancelled%' AND L.status NOT LIKE '%rejected%') `;
 
     let managerQuery = `
     SELECT L.*, E.name, E.role,E.employee_id,E.email,E.department ,E.designation FROM leave_request L
 JOIN employee E ON L.employee_id = E.employee_id
-WHERE E.manager_id = ?
+WHERE E.manager_id = ? AND (L.status NOT LIKE '%cancelled%' AND L.status NOT LIKE '%rejected%')
     `;
     let employeeQuery = `
     SELECT L.*, E.name,E.designation, E.role,E.employee_id,E.email,E.department,E.manager_id FROM leave_request L
 JOIN employee E ON L.employee_id = E.employee_id
-WHERE E.manager_id = (SELECT manager_id FROM employee WHERE employee_id = ?)
+WHERE E.manager_id = (SELECT manager_id FROM employee WHERE employee_id = ?) AND (L.status NOT LIKE '%cancelled%' AND L.status NOT LIKE '%rejected%')
     `;
 
     if (employeeIdSearch && parseInt(employeeIdSearch) !== 0) {
       let search = ` AND E.employee_id = ${parseInt(employeeIdSearch)}`;
       managerQuery += search;
       employeeQuery += search;
+      adminQuery += search;
     }
 
     if (!req.user) {
@@ -502,12 +511,28 @@ WHERE E.manager_id = (SELECT manager_id FROM employee WHERE employee_id = ?)
       const [leave_results] = await connection.query(managerQuery, [
         employee_id,
       ]);
+
       if (leave_results.length === 0) {
         return res.status(200).json({
           leaveData: [],
         });
       }
       const leaveData = organizeLeaveData(leave_results);
+      return res.status(200).json({
+        leaveData,
+      });
+    }
+    if (role === "admin") {
+      console.log("adminnnnnnnnnnnnnnnnn");
+      const [leave_results] = await connection.query(adminQuery);
+      console.log(leave_results.length === 0);
+      if (leave_results.length === 0) {
+        return res.status(200).json({
+          leaveData: [],
+        });
+      }
+      const leaveData = organizeLeaveData(leave_results);
+
       return res.status(200).json({
         leaveData,
       });
@@ -533,7 +558,6 @@ WHERE E.manager_id = (SELECT manager_id FROM employee WHERE employee_id = ?)
       leaveData: [],
     });
   } catch (error) {
-    console.log(error);
     return res.status(500).json({
       error: error.message,
     });
@@ -543,8 +567,8 @@ WHERE E.manager_id = (SELECT manager_id FROM employee WHERE employee_id = ?)
 export const getTeamEmployees = async (req, res) => {
   try {
     const { search, role: searchRole, department } = req.query;
-    console.log(req.query);
 
+    let adminQuery = `SELECT  name, role,employee_id,email,department ,designation FROM employee`;
     let managerSearchQuery = ` SELECT  name, role,employee_id,email,department ,designation FROM employee 
     WHERE manager_id = ?`;
     let employeeSearchQuery = `   SELECT  name,designation, role,employee_id,email,department,manager_id FROM employee
@@ -554,14 +578,17 @@ export const getTeamEmployees = async (req, res) => {
       managerSearchQuery = managerSearchQuery + ` AND name LIKE '%${search}%'`;
       employeeSearchQuery =
         employeeSearchQuery + ` AND name LIKE '%${search}%'`;
+      adminQuery + ` AND name LIKE '%${search}%'`;
     }
     if (searchRole && searchRole !== "all") {
       managerSearchQuery += ` AND role='${searchRole}'`;
       employeeSearchQuery += ` AND role='${searchRole}'`;
+      adminQuery += ` AND role='${searchRole}'`;
     }
     if (department && department !== "all") {
       managerSearchQuery += ` AND department='${department}'`;
       employeeSearchQuery += ` AND department='${department}'`;
+      adminQuery += ` AND department='${department}'`;
     }
     if (!req.user) {
       throw Error("User not found");
@@ -589,12 +616,18 @@ export const getTeamEmployees = async (req, res) => {
         employee_results,
       });
     }
+    if (role === "admin") {
+      const [employee_results] = await connection.query(adminQuery);
+
+      return res.status(200).json({
+        employee_results,
+      });
+    }
 
     return res.status(200).json({
       employee_results: [],
     });
   } catch (error) {
-    console.log(error);
     return res.status(500).json({
       error: error.message,
     });
@@ -606,7 +639,6 @@ export const getRoles = async (req, res) => {
     const [role_results] = await connection.query(`
     SELECT DISTINCT(role) FROM employee;
     `);
-    console.log(role_results);
 
     res.status(200).json({
       roles: role_results,
@@ -651,7 +683,7 @@ export const getLeavesByEmployeeByMonth = async (req, res) => {
       ` select sum(leave_taken_month) as Leave_Taken,month from employee_leave where employee_id = ? and year = ? group by month;`,
       [employee_id, year]
     );
-    console.log(leaveRemainingResult);
+
     if (leaveRemainingResult.length === 0) {
       logger.info("No leave taken for the particular year");
       return res.status(201).json({
@@ -672,5 +704,74 @@ export const getLeavesByEmployeeByMonth = async (req, res) => {
     res.status(500).json({
       error: error.message,
     });
+  }
+};
+export const getAllEmployees = async (req, res) => {
+  try {
+    const [employees] = await connection.query("SELECT * FROM employee");
+    res.status(200).json({
+      employees,
+    });
+  } catch (error) {
+    logger.error("Error fetching all employees:", error.message);
+    res.status(500).json({
+      error: error.message,
+    });
+  }
+};
+
+export const changeEmployeeIsActive = async (req, res) => {
+  const { employee_id } = req.params;
+  const { is_active } = req.body;
+
+  logger.info("Changing is_active status for employee", {
+    employee_id,
+    is_active,
+  });
+
+  if (typeof is_active === "undefined" || employee_id === undefined) {
+    return res.status(400).json({ message: "Required parameters missing" });
+  }
+
+  try {
+    const [result] = await connection.query(
+      "UPDATE employee SET is_active = ? WHERE employee_id = ?",
+      [is_active ? 1 : 0, employee_id]
+    );
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: "Employee not found" });
+    }
+    res.status(200).json({ message: "Is Active status updated successfully" });
+  } catch (error) {
+    logger.error("Error updating is_active:", error.message);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+export const changeEmployeeInNotice = async (req, res) => {
+  const { employee_id } = req.params;
+  const { in_notice } = req.body;
+
+  logger.info("Changing in_notice status for employee", {
+    employee_id,
+    in_notice,
+  });
+
+  if (typeof in_notice === "undefined" || employee_id === undefined) {
+    return res.status(400).json({ message: "Required parameters missing" });
+  }
+
+  try {
+    const [result] = await connection.query(
+      "UPDATE employee SET in_notice = ? WHERE employee_id = ?",
+      [in_notice ? 1 : 0, employee_id]
+    );
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: "Employee not found" });
+    }
+    res.status(200).json({ message: "In Notice status updated successfully" });
+  } catch (error) {
+    logger.error("Error updating in_notice:", error.message);
+    res.status(500).json({ error: error.message });
   }
 };

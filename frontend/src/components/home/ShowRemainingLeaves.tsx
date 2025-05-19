@@ -26,7 +26,8 @@ const ShowRemainingLeaves = () => {
     return <>{error}</>;
   }
   if (data && barChartData) {
-    console.log(barChartData.leaveRemaining);
+    console.log("Bar Chart Data");
+    console.log(barChartData);
     return (
       <>
         <div>

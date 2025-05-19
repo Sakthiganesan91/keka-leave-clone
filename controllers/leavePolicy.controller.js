@@ -170,3 +170,50 @@ export const getLeavePolicies = async (req, res) => {
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
+
+export const getLeavePoliciesData = async (req, res) => {
+  try {
+    logger.info("Fetching leave policies");
+    const [results] = await connection.query(
+      `SELECT leavepolicy_id, leave_type_name,
+      need_approval,
+      allow_half_day,
+      max_days_per_year,
+      paid,
+      deduct_salary,
+      approval_level_needed,
+      max_days_per_month,
+      not_approved_leave,
+      roll_over_allowed,
+      roll_over_count,
+      roll_over_monthly_allowed FROM leavepolicy ORDER BY leavepolicy_id`
+    );
+    if (results.length === 0) {
+      logger.info("No leave policies found");
+      return res.status(404).json({ message: "No leave policies found" });
+    }
+    logger.info("Leave policies fetched successfully", results);
+    res.status(200).json({
+      message: "Leave policies fetched successfully",
+      policies: results,
+    });
+  } catch (error) {
+    logger.error("Error fetching leave policies:", error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+export const deleteLeavePolicy = async (req, res) => {
+  const { leavepolicyId } = req.params;
+  try {
+    await connection.query(`DELETE FROM leavepolicy where leavepolicy_id = ?`, [
+      leavepolicyId,
+    ]);
+    res.status(200).json({
+      message: "Leave policy Deleted successfully",
+    });
+  } catch (error) {
+    logger.error("Error fetching leave policies:", error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};

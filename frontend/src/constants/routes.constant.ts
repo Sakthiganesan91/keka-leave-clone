@@ -7,6 +7,8 @@ import {
   UserPlus,
   FilePlus,
   ClipboardCheck,
+  User,
+  BookText,
 } from "lucide-react";
 export const routes = [
   {
@@ -38,13 +40,23 @@ export const managerRoutes = [
 
 export const adminRoutes = [
   {
-    title: "Add/Update Employees",
+    title: "Add Employee",
     url: "/create-employee",
     icon: UserPlus,
   },
   {
-    title: "Add/Update Leave Policies",
-    url: "#",
+    title: "Employees",
+    url: "/list-employees",
+    icon: User,
+  },
+  {
+    title: "Policies",
+    url: "/list-policies",
+    icon: BookText,
+  },
+  {
+    title: "Add Leave Policies",
+    url: "/add-leave-policy",
     icon: FilePlus,
   },
 ];

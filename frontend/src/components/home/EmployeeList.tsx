@@ -68,12 +68,12 @@ const EmployeeList = ({
 
   if (data) {
     return (
-      <div>
+      <div className="">
         <div className="font-bold text-cyan-600 text-xl">
           <p>My Team</p>
         </div>
 
-        <div className="">
+        <div>
           <div>
             <label htmlFor="roles">Role</label>
             <div className="my-2 bg-gray-800 w-fit py-1 rounded-sm font-bold text-gray-400 ">

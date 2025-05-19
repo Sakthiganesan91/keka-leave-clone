@@ -22,6 +22,9 @@ export const login = async (req, res) => {
 
   const user = result[0];
 
+  if (user.is_active === 0) {
+    return res.status(401).json({ message: "Access Forbidden" });
+  }
   const isPasswordValid = await bcrypt.compare(password, user.password);
   if (!isPasswordValid) {
     logger.warn("Login failed: Incorrect password", { email });

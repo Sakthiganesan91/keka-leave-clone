@@ -1,6 +1,36 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 
+const SECRET_KEY = import.meta.env.SECRET_KEY;
+
+export async function encrypt(plainText: string): Promise<string> {
+  let encrypted = "";
+  for (let i = 0; i < plainText.length; i++) {
+    const keyChar = SECRET_KEY[i % SECRET_KEY.length];
+    const encryptedChar = String.fromCharCode(
+      plainText.charCodeAt(i) ^ (keyChar.charCodeAt(0) + 5)
+    );
+    encrypted += encryptedChar;
+  }
+  return btoa(encrypted);
+}
+
+export function decrypt(
+  encryptedText: string,
+  key: string = SECRET_KEY
+): string {
+  const decoded = atob(encryptedText);
+  let decrypted = "";
+  for (let i = 0; i < decoded.length; i++) {
+    const keyChar = key[i % key.length];
+    const decryptedChar = String.fromCharCode(
+      decoded.charCodeAt(i) ^ (keyChar.charCodeAt(0) - 5)
+    );
+    decrypted += decryptedChar;
+  }
+  return decrypted;
+}
+
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
@@ -125,7 +155,7 @@ const monthNames = [
 ];
 
 export function getMonthName(monthNumber: number) {
-  return monthNames[monthNumber];
+  return monthNames[monthNumber - 1];
 }
 
 export const debounce = (func: (...args: any[]) => void, delay: number) => {

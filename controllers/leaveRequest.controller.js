@@ -408,6 +408,7 @@ const handleFinalApproval = async ({
   noofdays,
   leavePolicyId,
   max_days_per_year,
+  role,
 }) => {
   const [approvers] = await connection.query(
     `SELECT CASE 
@@ -424,7 +425,7 @@ const handleFinalApproval = async ({
     [id, id]
   );
 
-  if (!approvers[0].result) {
+  if (!approvers[0].result && role !== "admin") {
     throw Error("Only HR can permit the last level of Leave Request");
   }
 
@@ -462,7 +463,12 @@ const handleFinalApproval = async ({
   await markApproverAsApproved(leave_id, id);
 };
 
-const handleIntermediateApproval = async ({ leave_id, id, currentLevel }) => {
+const handleIntermediateApproval = async ({
+  leave_id,
+  id,
+  currentLevel,
+  role,
+}) => {
   const [manager] = await connection.query(
     `SELECT is_active FROM employee WHERE employee_id = (SELECT approver_id FROM leave_request WHERE leave_id = ?)`,
     [leave_id]
@@ -500,7 +506,7 @@ const handleIntermediateApproval = async ({ leave_id, id, currentLevel }) => {
     nextApproverId = hr[0].employee_id;
   } else {
     const [employee] = await connection.query(
-      `SELECT employee_id FROM leave_request WHERE leave_id = ?`,
+      `SELECT employee_id FROM employee where role='hr'`,
       [leave_id]
     );
     nextApproverId = employee[0]?.employee_id || null;
@@ -776,8 +782,7 @@ export const raiseLeaveRequest = async (req, res) => {
     leave_reason,
     is_half_day,
   } = req.body;
-  console.log("Employee Leave Start Date and End Date");
-  console.log(start_date, end_date);
+
   try {
     if (!employeeId) throw Error("Employee ID is required");
 
@@ -867,19 +872,34 @@ export const raiseLeaveRequest = async (req, res) => {
 
 export const getLeaveRequest = async (req, res) => {
   const { manager_id } = req.query;
+  const role = req.user.role;
 
-  if (!manager_id) {
+  if (role !== "admin" && !manager_id) {
     throw Error("Manager id not found");
   }
-  try {
-    const [leave_request_results] = await connection.query(
-      `SELECT L.*,E.name,E.designation from leave_request L join employee E on l.employee_id = E.employee_id where L.approver_id = ? and L.status='pending'`,
-      [manager_id]
-    );
 
-    res.status(200).json({
-      leavesToBeHandled: leave_request_results,
-    });
+  try {
+    if (role === "admin") {
+      const [leave_request_results] = await connection.query(
+        `SELECT L.*, E.name, E.designation
+        FROM leave_request L
+        JOIN employee E ON L.employee_id = E.employee_id
+        JOIN employee A ON L.approver_id = A.employee_id
+        WHERE L.status = 'pending' AND A.is_active = 0;`
+      );
+
+      res.status(200).json({
+        leavesToBeHandled: leave_request_results,
+      });
+    } else {
+      const [leave_request_results] = await connection.query(
+        `SELECT L.*,E.name,E.designation from leave_request L join employee E on l.employee_id = E.employee_id where L.approver_id = ? and L.status='pending'`,
+        [manager_id]
+      );
+      res.status(200).json({
+        leavesToBeHandled: leave_request_results,
+      });
+    }
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -935,7 +955,9 @@ export const cancelOrRejectLeaveRequest = async (req, res) => {
 export const acceptLeaveRequest = async (req, res) => {
   const leave_id = req.params.leave_id;
   const { id } = req.query;
-  console.log(leave_id, id);
+
+  const role = req.user.role;
+
   try {
     const [leaveRequest] = await connection.query(
       `SELECT leavepolicy_id, current_level, start_date, end_date, employee_id, leave_type, noofdays 
@@ -979,6 +1001,7 @@ export const acceptLeaveRequest = async (req, res) => {
         noofdays,
         leavePolicyId,
         max_days_per_year,
+        role,
       });
       return res.status(200).json({ message: "Leave Approved" });
     }
@@ -987,9 +1010,29 @@ export const acceptLeaveRequest = async (req, res) => {
       leave_id,
       id,
       currentLevel,
+      role,
     });
 
     res.status(200).json({ message: "Leave Request Updated" });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+export const getInactiveApproversLeaveRequest = async (req, res) => {
+  try {
+    const [leave_request_results] = await connection.query(
+      `SELECT L.*, E.name, E.designation
+FROM leave_request L
+JOIN employee E ON L.employee_id = E.employee_id
+JOIN employee A ON L.approver_id = A.employee_id
+WHERE L.approver_id = ? AND L.status = 'pending' AND A.is_active = 0;
+`
+    );
+
+    res.status(200).json({
+      leavesToBeHandled: leave_request_results,
+    });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

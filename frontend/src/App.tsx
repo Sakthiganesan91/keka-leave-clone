@@ -11,6 +11,9 @@ import { highLevelAuthors } from "./lib/utils.ts";
 import ApproveLeave from "./Pages/Home/ApproveLeave.tsx";
 import ViewTeam from "./Pages/Home/ViewTeam.tsx";
 import EmployeeSection from "./Pages/admin/EmployeeSection.tsx";
+import AllEmployees from "./Pages/admin/AllEmployees.tsx";
+import AddLeavePolicy from "./Pages/admin/AddLeavePolicy.tsx";
+import LeavePolicies from "./Pages/admin/LeavePolicies.tsx";
 function App() {
   const { user } = useAuth();
 
@@ -58,6 +61,21 @@ function App() {
           {user && user?.role === "admin" && (
             <>
               <Route path="/create-employee" element={<EmployeeSection />} />
+            </>
+          )}
+          {user && user?.role === "admin" && (
+            <>
+              <Route path="/list-employees" element={<AllEmployees />} />
+            </>
+          )}
+          {user && user?.role === "admin" && (
+            <>
+              <Route path="/list-policies" element={<LeavePolicies />} />
+            </>
+          )}
+          {user && user?.role === "admin" && (
+            <>
+              <Route path="/add-leave-policy" element={<AddLeavePolicy />} />
             </>
           )}
           <Route

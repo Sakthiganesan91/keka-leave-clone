@@ -12,6 +12,9 @@ import {
   getRoles,
   getDepartments,
   getLeavesByEmployeeByMonth,
+  getAllEmployees,
+  changeEmployeeIsActive,
+  changeEmployeeInNotice,
 } from "../controllers/employee.controller.js";
 import logger from "../config/logger.js";
 import { requireAuth } from "../middlewares/authMiddleware.js";
@@ -233,9 +236,14 @@ routes.get("/get-team-employees", requireAuth, getTeamEmployees);
 routes.get("/get-roles", requireAuth, getRoles);
 routes.get("/get-departments", requireAuth, getDepartments);
 
+routes.get("/get-all-employees", requireAuth, checkAdmin, getAllEmployees);
+
 routes.get(
   "/get-leave-remaining-by-month/:employee_id",
   requireAuth,
   getLeavesByEmployeeByMonth
 );
+
+routes.put("/change-employee-status/:employee_id", changeEmployeeIsActive);
+routes.put("/change-employee-notice/:employee_id", changeEmployeeInNotice);
 export { routes };

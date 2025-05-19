@@ -22,7 +22,12 @@ const CalendarPage = () => {
     return (
       <div className="grid grid-cols-8 gap-1 my-4">
         <div className="col-span-2">
-          <EmployeeList setEmployeeId={setEmployeeId} selectedId={employeeId} />
+          <div className="h-1/3 overflow-y-auto">
+            <EmployeeList
+              setEmployeeId={setEmployeeId}
+              selectedId={employeeId}
+            />
+          </div>
           {employeeId !== 0 && (
             <Button
               onClick={() => {

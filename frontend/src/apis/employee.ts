@@ -1,4 +1,5 @@
 import { request } from "@/global/axios-global";
+import { EmployeeCreation } from "@/types";
 
 export const getTeamEmployees = async ({
   employeeName = "",
@@ -9,7 +10,6 @@ export const getTeamEmployees = async ({
   role?: string;
   department?: string;
 }) => {
-  console.log(role, department);
   const response = await request.get(
     `/employees/get-team-employees?search=${employeeName}&role=${role}&department=${department}`
   );
@@ -24,5 +24,51 @@ export const getRoles = async () => {
 
 export const getDepartments = async () => {
   const response = await request.get(`/employees/get-departments`);
+  return response.data;
+};
+
+export const createEmployee = async ({
+  values,
+}: {
+  values: EmployeeCreation;
+}) => {
+  const response = await request.post(`/employees/add-employee`, { ...values });
+  return response.data;
+};
+
+export const getAllEmployees = async () => {
+  const response = await request.get("/employees/get-all-employees");
+  return response.data;
+};
+
+export const changeEmployeeStatus = async ({
+  isActive,
+  employeeId,
+}: {
+  isActive: boolean;
+  employeeId: number;
+}) => {
+  const response = await request.put(
+    `/employees/change-employee-status/${employeeId}`,
+    {
+      is_active: isActive,
+    }
+  );
+  return response.data;
+};
+
+export const changeEmployeeNotice = async ({
+  inNotice,
+  employeeId,
+}: {
+  inNotice: boolean;
+  employeeId: number;
+}) => {
+  const response = await request.put(
+    `/employees/change-employee-notice/${employeeId}`,
+    {
+      in_notice: inNotice,
+    }
+  );
   return response.data;
 };

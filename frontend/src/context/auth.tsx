@@ -1,6 +1,8 @@
 import { request } from "../global/axios-global";
 import React, { createContext, useState, useContext, useEffect } from "react";
-
+import Cryptr from "cryptr";
+import { encrypt } from "@/lib/utils";
+const cryptr = new Cryptr(import.meta.env.VITE_SECRET_KEY!);
 export interface User {
   id: number;
   email: string;
@@ -29,9 +31,16 @@ export const AuthContextProvider: React.FC<{ children: React.ReactNode }> = ({
     return savedUser ? JSON.parse(savedUser) : null;
   });
 
-  const login = (user: User) => {
-    setUser(user);
-    localStorage.setItem("user", JSON.stringify(user));
+  const login = async (user: User) => {
+    try {
+      setUser(user);
+
+      const userStr = JSON.stringify(user);
+
+      localStorage.setItem("user", userStr);
+    } catch (error) {
+      console.error("Login error:", error);
+    }
   };
 
   const logout = () => {

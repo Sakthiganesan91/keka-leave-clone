@@ -8,7 +8,7 @@ export const checkHR = async (req, res, next) => {
       return res.status(400).json({ message: "Employee ID is Not Valid" });
     }
     if (role !== "hr") {
-      if (role === "manager") {
+      if (role === "manager" || role === "admin") {
         return next();
       }
       logger.warn(
