@@ -4,12 +4,10 @@ import cron from "node-cron";
 import cors from "cors";
 import helmet from "helmet";
 import cookieParser from "cookie-parser";
-import swaggerUI from "swagger-ui-express";
 
 import { performLeaveRollover } from "./helper/rollOverMonthly.js";
 import { performYearlyLeaveRollover } from "./helper/rollOverYearly.js";
 
-import swaggerSpec from "./swaggerDoc.js";
 import logger from "./config/logger.js";
 
 import { routes as employeeRoutes } from "./routes/employee.route.js";
@@ -43,8 +41,6 @@ app.use("/auth", authRoutes);
 app.use("/employees", apiLimiter, employeeRoutes);
 app.use("/leave-policies", apiLimiter, leavePolicyRoutes);
 app.use("/leave-requests", apiLimiter, leaveRequestRoutes);
-
-app.use("/api-docs", swaggerUI.serve, swaggerUI.setup(swaggerSpec));
 
 // month
 cron.schedule("5 0 1 * *", async () => {
