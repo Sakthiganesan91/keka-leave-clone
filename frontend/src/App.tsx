@@ -5,7 +5,6 @@ import { SidebarProvider, SidebarTrigger } from "./components/ui/sidebar.tsx";
 import { AppSidebar } from "./components/sidebar/app-sidebar.tsx";
 import MainPage from "./Pages/Home/MainPage.tsx";
 import { useAuth } from "./context/auth.tsx";
-
 import CalendarPage from "./Pages/Home/CalendarPage.tsx";
 import { highLevelAuthors } from "./lib/utils.ts";
 import ApproveLeave from "./Pages/Home/ApproveLeave.tsx";
@@ -14,20 +13,39 @@ import EmployeeSection from "./Pages/admin/EmployeeSection.tsx";
 import AllEmployees from "./Pages/admin/AllEmployees.tsx";
 import AddLeavePolicy from "./Pages/admin/AddLeavePolicy.tsx";
 import LeavePolicies from "./Pages/admin/LeavePolicies.tsx";
+
+import { io } from "socket.io-client";
+import { useEffect } from "react";
+import { toast } from "sonner";
+
 function App() {
   const { user } = useAuth();
 
+  useEffect(() => {
+    let socket = io("http://localhost:4000", {
+      withCredentials: true,
+    });
+    const handleMessage = (data: { uploadedBy: number; message: string }) => {
+      user?.id === data.uploadedBy &&
+        data.message &&
+        toast.success(data.message);
+    };
+
+    socket.on("job-completed", handleMessage);
+
+    return () => {
+      socket.off("message", handleMessage);
+    };
+  }, []);
   return (
     <div className="grid grid-cols-12">
-      <SidebarProvider className="col-span-3">
-        {user ? (
-          <>
-            <AppSidebar />
-            <SidebarTrigger />
-          </>
-        ) : null}
-      </SidebarProvider>
-      <div className="col-span-9 mx-1.5">
+      {user && (
+        <SidebarProvider className="col-span-3">
+          <AppSidebar />
+          <SidebarTrigger />
+        </SidebarProvider>
+      )}
+      <div className="col-span-9 mx-1">
         <Routes>
           <Route
             path="/"

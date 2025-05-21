@@ -15,10 +15,12 @@ import {
   getAllEmployees,
   changeEmployeeIsActive,
   changeEmployeeInNotice,
+  bulkUploadEmployees,
 } from "../controllers/employee.controller.js";
 import logger from "../config/logger.js";
 import { requireAuth } from "../middlewares/authMiddleware.js";
 import { checkAdmin } from "../middlewares/checkAdmin.js";
+import { upload } from "../config/multer.js";
 
 const routes = express.Router();
 
@@ -66,4 +68,12 @@ routes.get(
 
 routes.put("/change-employee-status/:employee_id", changeEmployeeIsActive);
 routes.put("/change-employee-notice/:employee_id", changeEmployeeInNotice);
+
+routes.post(
+  `/bulk-upload`,
+  requireAuth,
+  checkAdmin,
+  upload.single("file"),
+  bulkUploadEmployees
+);
 export { routes };

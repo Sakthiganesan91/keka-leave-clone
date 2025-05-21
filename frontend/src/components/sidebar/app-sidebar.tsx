@@ -7,6 +7,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarTrigger,
 } from "@/components/ui/sidebar";
 import {
   adminRoutes,
@@ -21,16 +22,24 @@ import { highLevelAuthors } from "@/lib/utils";
 export function AppSidebar() {
   const { user } = useAuth();
   return (
-    <Sidebar>
+    <Sidebar
+      style={{
+        width: "fit-content",
+      }}
+    >
       <SidebarContent className="bg-black">
         <SidebarGroup>
           <SidebarGroupLabel className="text-1xl text-cyan-500 font-bold my-2">
             Leave Management System
           </SidebarGroupLabel>
+
           <SidebarGroupContent>
             <SidebarMenu>
               {routes.map((route) => (
-                <SidebarMenuItem key={route.title}>
+                <SidebarMenuItem
+                  key={route.title}
+                  className="hover:bg-cyan-600"
+                >
                   <SidebarMenuButton asChild>
                     <Link to={route.url}>
                       <route.icon />
@@ -42,7 +51,10 @@ export function AppSidebar() {
 
               {highLevelAuthors.includes(user?.role! || "") &&
                 managerRoutes.map((route) => (
-                  <SidebarMenuItem key={route.title}>
+                  <SidebarMenuItem
+                    key={route.title}
+                    className="hover:bg-cyan-600"
+                  >
                     <SidebarMenuButton asChild>
                       <Link to={route.url}>
                         <route.icon />
@@ -54,7 +66,10 @@ export function AppSidebar() {
 
               {user?.role! === "admin" &&
                 adminRoutes.map((route) => (
-                  <SidebarMenuItem key={route.title}>
+                  <SidebarMenuItem
+                    key={route.title}
+                    className="hover:bg-cyan-600"
+                  >
                     <SidebarMenuButton asChild>
                       <Link to={route.url}>
                         <route.icon />

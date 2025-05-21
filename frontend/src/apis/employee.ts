@@ -72,3 +72,23 @@ export const changeEmployeeNotice = async ({
   );
   return response.data;
 };
+
+export const uploadFile = async (file: File) => {
+  const formData = new FormData();
+  formData.append("file", file);
+  const response = await request.post("/employees/bulk-upload", formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+  return response.data;
+};
+
+export const assignManager = async (
+  employeeEmail: string,
+  managerEmail: string
+) => {
+  const response = await request.post(
+    `/employees/set-manager?employeeEmail=${employeeEmail}&managerEmail=${managerEmail}`
+  );
+
+  return response.data;
+};

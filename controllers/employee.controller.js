@@ -1,6 +1,8 @@
+import { tryCatch } from "bullmq";
 import { query as connection } from "../config/database.js";
 import logger from "../config/logger.js";
 import bcrypt from "bcryptjs";
+import { addemployeeQueue } from "../config/redis.js";
 
 export const getEmployeeById = async (employee_id) => {
   try {
@@ -148,6 +150,7 @@ export const setManager = async (req, res) => {
     });
     res.status(201).json({
       results,
+      message: "Manager Assinged Successfully",
     });
   } catch (error) {
     logger.error("Error setting manager:", error.message);
@@ -708,7 +711,11 @@ export const getLeavesByEmployeeByMonth = async (req, res) => {
 };
 export const getAllEmployees = async (req, res) => {
   try {
-    const [employees] = await connection.query("SELECT * FROM employee");
+    const [employees] = await connection.query(
+      "SELECT E.*,M.email as manager_email,M.name as manager_name FROM employee E LEFT JOIN employee M on E.manager_id=M.employee_id"
+    );
+
+    console.log(employees);
     res.status(200).json({
       employees,
     });
@@ -773,5 +780,24 @@ export const changeEmployeeInNotice = async (req, res) => {
   } catch (error) {
     logger.error("Error updating in_notice:", error.message);
     res.status(500).json({ error: error.message });
+  }
+};
+
+export const bulkUploadEmployees = async (req, res) => {
+  try {
+    const filePath = req.file.path;
+    const uploadedBy = req.user.employee_id;
+
+    const job = await addemployeeQueue.add("bulk-import", {
+      filePath,
+      uploadedBy,
+    });
+    res.status(202).json({
+      jobId: job.id,
+      message: "Employee import job has been queued.",
+    });
+  } catch (err) {
+    console.error("Error uploading file:", err);
+    res.status(500).json({ error: "Internal server error." });
   }
 };
