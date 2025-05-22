@@ -92,3 +92,39 @@ export const assignManager = async (
 
   return response.data;
 };
+
+export const getEmployeeById = async (employeeId: number) => {
+  const response = await request.get(`employees/get-employee/${employeeId}`);
+  return response.data;
+};
+
+export const changePhoneNumber = async ({
+  phone_number,
+  employee_id,
+}: {
+  phone_number: string | null;
+  employee_id: number;
+}) => {
+  const response = await request.put(`/employees/update-phone/${employee_id}`, {
+    phone_number,
+  });
+
+  return response.data;
+};
+
+export const changePasswordEmployee = async ({
+  password,
+  employee_id,
+}: {
+  password: string;
+  employee_id: number;
+}) => {
+  const response = await request.put(
+    `/employees/update-password/${employee_id}`,
+    {
+      password,
+    }
+  );
+
+  return response.data;
+};

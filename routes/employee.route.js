@@ -16,6 +16,10 @@ import {
   changeEmployeeIsActive,
   changeEmployeeInNotice,
   bulkUploadEmployees,
+  getByEmployeeId,
+  getEmployeeById,
+  updateEmployeePhoneNumber,
+  updateEmployeePassword,
 } from "../controllers/employee.controller.js";
 import logger from "../config/logger.js";
 import { requireAuth } from "../middlewares/authMiddleware.js";
@@ -75,5 +79,19 @@ routes.post(
   checkAdmin,
   upload.single("file"),
   bulkUploadEmployees
+);
+
+routes.get("/get-employee/:employee_id", requireAuth, getByEmployeeId);
+
+routes.put(
+  `/update-phone/:employee_id`,
+  requireAuth,
+  updateEmployeePhoneNumber
+);
+
+routes.put(
+  `/update-password/:employee_id`,
+  requireAuth,
+  updateEmployeePassword
 );
 export { routes };

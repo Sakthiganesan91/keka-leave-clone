@@ -233,6 +233,94 @@ export const updateEmployee = async (req, res) => {
     });
   }
 };
+
+export const updateEmployeePhoneNumber = async (req, res) => {
+  const { phone_number } = req.body;
+
+  const { employee_id } = req.params;
+  logger.info("Updating employee", {
+    body: req.body,
+    employee_id,
+  });
+  if (!employee_id) {
+    logger.error("Employee ID is required to update employee");
+    return res.status(400).json({ message: "Employee ID is required" });
+  }
+  if (!phone_number) {
+    logger.error("Required fields are missing for employee update");
+    return res.status(400).json({ message: "Required fields are missing" });
+  }
+
+  try {
+    const [results] = await connection.query(
+      `UPDATE employee 
+       SET phone_number = ? 
+       WHERE employee_id = ?`,
+      [phone_number, employee_id]
+    );
+
+    if (results.affectedRows === 0) {
+      logger.error("Employee not found for update");
+      return res.status(404).json({ message: "Employee not found" });
+    }
+    logger.info("Employee updated successfully", {
+      employee_id,
+    });
+    res.status(201).json({
+      message: "Employee updated successfully",
+    });
+  } catch (error) {
+    logger.error("Error updating employee:", error);
+    res.status(500).json({
+      error: error.message,
+    });
+  }
+};
+
+export const updateEmployeePassword = async (req, res) => {
+  const { password } = req.body;
+
+  const { employee_id } = req.params;
+  logger.info("Updating employee", {
+    body: req.body,
+    employee_id,
+  });
+  if (!employee_id) {
+    logger.error("Employee ID is required to update employee");
+    return res.status(400).json({ message: "Employee ID is required" });
+  }
+  if (!password) {
+    logger.error("Required fields are missing for employee update");
+    return res.status(400).json({ message: "Required fields are missing" });
+  }
+
+  try {
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+    const [results] = await connection.query(
+      `UPDATE employee 
+       SET password = ? 
+       WHERE employee_id = ?`,
+      [hashedPassword, employee_id]
+    );
+
+    if (results.affectedRows === 0) {
+      logger.error("Employee not found for update");
+      return res.status(404).json({ message: "Employee not found" });
+    }
+    logger.info("Password changed successfully", {
+      employee_id,
+    });
+    res.status(201).json({
+      message: "Password changed successfully",
+    });
+  } catch (error) {
+    logger.error("Error updating employee:", error);
+    res.status(500).json({
+      error: error.message,
+    });
+  }
+};
 const createEmployeePayroll = async (
   employee_id,
   base_salary,
@@ -799,5 +887,22 @@ export const bulkUploadEmployees = async (req, res) => {
   } catch (err) {
     console.error("Error uploading file:", err);
     res.status(500).json({ error: "Internal server error." });
+  }
+};
+
+export const getByEmployeeId = async (req, res) => {
+  const { employee_id } = req.params;
+  try {
+    if (!employee_id) {
+      throw new Error("Employee id not found");
+    }
+    const employee = await getEmployeeById(employee_id);
+
+    res.status(201).json({
+      employee_id: employee.employee_id,
+      phone_number: employee.phone_number,
+    });
+  } catch (error) {
+    res.status(500).json(error);
   }
 };

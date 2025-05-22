@@ -1,15 +1,13 @@
 import {
   Calendar,
   Megaphone,
-  Search,
-  Settings,
   Users,
   UserPlus,
   FilePlus,
   ClipboardCheck,
   User,
   BookText,
-  Bell,
+  UserRoundPen,
 } from "lucide-react";
 export const routes = [
   {
@@ -22,6 +20,11 @@ export const routes = [
     title: "Calendar",
     url: "/calendar",
     icon: Calendar,
+  },
+  {
+    title: "Edit Profile",
+    url: "/edit-profile",
+    icon: UserRoundPen,
   },
 ];
 

@@ -17,6 +17,7 @@ import LeavePolicies from "./Pages/admin/LeavePolicies.tsx";
 import { io } from "socket.io-client";
 import { useEffect } from "react";
 import { toast } from "sonner";
+import EditProfile from "./Pages/Home/EditProfile.tsx";
 
 function App() {
   const { user } = useAuth();
@@ -50,6 +51,10 @@ function App() {
           <Route
             path="/"
             element={user ? <MainPage /> : <Navigate to={"/login"} />}
+          />
+          <Route
+            path="/edit-profile"
+            element={user ? <EditProfile /> : <Navigate to={"/login"} />}
           />
           <Route
             path="/calendar"
