@@ -1,8 +1,6 @@
 import { request } from "../global/axios-global";
 import React, { createContext, useState, useContext, useEffect } from "react";
-import Cryptr from "cryptr";
-import { encrypt } from "@/lib/utils";
-const cryptr = new Cryptr(import.meta.env.VITE_SECRET_KEY!);
+
 export interface User {
   id: number;
   email: string;

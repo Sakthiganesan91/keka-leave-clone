@@ -1,12 +1,10 @@
 import {
   approveLeaveRequest,
   getLeavesByEmployeeId,
-  getLeavesForApproval,
   rejectOrCancelRequest,
 } from "@/apis/leave";
 import {
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -36,6 +34,12 @@ const EmployeeLeaveModal = ({ employee_id }: { employee_id: number }) => {
       console.log(error);
     },
   });
+
+  const getDate = (startDate: string, endDate: string) =>
+    startDate === endDate ? startDate : `${startDate} - ${endDate}`;
+
+  const getFormattedDate = (date: string) =>
+    new Date(date.split("T")[0]).toLocaleDateString();
 
   const rejectOrCancelMutation = useMutation({
     mutationFn: (values: { leave_id: number; id: number; status: string }) =>
@@ -94,20 +98,14 @@ const EmployeeLeaveModal = ({ employee_id }: { employee_id: number }) => {
                   </thead>
                   <tbody>
                     {data.leaves.map((leave: any) => {
-                      const startDate = new Date(
-                        leave.start_date.split("T")[0]
-                      ).toLocaleDateString();
-                      const endDate = new Date(
-                        leave.end_date.split("T")[0]
-                      ).toLocaleDateString();
+                      const startDate = getFormattedDate(leave.start_date);
+                      const endDate = getFormattedDate(leave.end_date);
                       return (
                         <React.Fragment key={leave.leave_id}>
                           <tr className="border-b border-gray-700 hover:bg-gray-800">
                             <td className="px-3 py-4">
                               <div className="font-medium text-white">
-                                {startDate === endDate
-                                  ? startDate
-                                  : `${startDate} - ${endDate}`}
+                                {getDate(startDate, endDate)}
                               </div>
                               <div className="text-sm text-gray-400">
                                 {leave.noofdays}
@@ -125,15 +123,6 @@ const EmployeeLeaveModal = ({ employee_id }: { employee_id: number }) => {
                             <td className="px-3 py-4">{leave.name}</td>
                             <td className="px-3 py-4">
                               {leave.status_updated_at?.split("T")[0]}
-                              {/* <p>
-                                {
-                                  leave.status_updated_at?.split("T")[1]
-                                //   .split(".")[0]
-                                  //   .split(":")
-                                  //   .slice(0, 2)
-                                  //   .join(":")
-                                }
-                              </p> */}
                             </td>
                             <td className="px-3 py-4 text-white">
                               {leave.leave_reason}
@@ -189,9 +178,6 @@ const EmployeeLeaveModal = ({ employee_id }: { employee_id: number }) => {
               }
             </div>
           )}
-          {/* <DialogDescription>
-              {data.message}-{data.leaves.length}
-            </DialogDescription> */}
         </DialogHeader>
       </DialogContent>
     );

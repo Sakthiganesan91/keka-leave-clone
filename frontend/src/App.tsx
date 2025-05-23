@@ -22,6 +22,11 @@ import EditProfile from "./Pages/Home/EditProfile.tsx";
 function App() {
   const { user } = useAuth();
 
+  const checkHighLevelAuthors = () =>
+    user && highLevelAuthors.includes(user?.role);
+
+  const isAdmin = () => user && user?.role === "admin";
+
   useEffect(() => {
     let socket = io("http://localhost:4000", {
       withCredentials: true,
@@ -63,44 +68,28 @@ function App() {
           <Route
             path="/approve"
             element={
-              user && highLevelAuthors.includes(user?.role) ? (
-                <ApproveLeave />
-              ) : (
-                <Navigate to={"/"} />
-              )
+              checkHighLevelAuthors() ? <ApproveLeave /> : <Navigate to={"/"} />
             }
           />
           <Route
             path="/teams"
             element={
-              user && highLevelAuthors.includes(user?.role) ? (
-                <ViewTeam />
-              ) : (
-                <Navigate to={"/"} />
-              )
+              checkHighLevelAuthors() ? <ViewTeam /> : <Navigate to={"/"} />
             }
           />
 
-          {user && user?.role === "admin" && (
+          {isAdmin() && (
             <>
               <Route path="/create-employee" element={<EmployeeSection />} />
-            </>
-          )}
-          {user && user?.role === "admin" && (
-            <>
+
               <Route path="/list-employees" element={<AllEmployees />} />
-            </>
-          )}
-          {user && user?.role === "admin" && (
-            <>
+
               <Route path="/list-policies" element={<LeavePolicies />} />
-            </>
-          )}
-          {user && user?.role === "admin" && (
-            <>
+
               <Route path="/add-leave-policy" element={<AddLeavePolicy />} />
             </>
           )}
+
           <Route
             path="/login"
             element={!user ? <LoginPage /> : <Navigate to={"/"} />}

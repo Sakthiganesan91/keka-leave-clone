@@ -169,8 +169,11 @@ const LeaveRequest = () => {
     return false;
   }, [form.watch("halfday")]);
 
+  const styles = {
+    maxWidth: "40vw",
+  };
   return (
-    <SheetContent style={{ maxWidth: "40vw" }}>
+    <SheetContent style={styles}>
       <SheetHeader>
         <SheetTitle>Apply Leave Request</SheetTitle>
       </SheetHeader>

@@ -1,5 +1,4 @@
 import ApproveLeaveTab from "@/components/home/ApproveLeaveTab";
-import React from "react";
 
 const ApproveLeave = () => {
   return (

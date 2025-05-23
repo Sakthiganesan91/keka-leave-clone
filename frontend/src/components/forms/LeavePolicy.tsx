@@ -49,10 +49,13 @@ export default function LeavePolicyForm() {
   });
 
   const onSubmit = (data: LeavePolicyFormValues) => {
-    console.log(data);
     mutation.mutate(data);
   };
 
+  const constraints = {
+    required: true,
+    valueAsNumber: true,
+  };
   return (
     <form
       onSubmit={handleSubmit(onSubmit)}
@@ -94,10 +97,7 @@ export default function LeavePolicyForm() {
           <Input
             type="number"
             id="approval_level_needed"
-            {...register("approval_level_needed", {
-              required: true,
-              valueAsNumber: true,
-            })}
+            {...register("approval_level_needed", constraints)}
           />
         </div>
         <div>
@@ -107,10 +107,7 @@ export default function LeavePolicyForm() {
           <Input
             type="number"
             id="max_days_per_month"
-            {...register("max_days_per_month", {
-              required: true,
-              valueAsNumber: true,
-            })}
+            {...register("max_days_per_month", constraints)}
           />
         </div>
         <div>
@@ -120,10 +117,7 @@ export default function LeavePolicyForm() {
           <Input
             type="number"
             id="roll_over_count"
-            {...register("roll_over_count", {
-              required: true,
-              valueAsNumber: true,
-            })}
+            {...register("roll_over_count", constraints)}
           />
         </div>
       </div>

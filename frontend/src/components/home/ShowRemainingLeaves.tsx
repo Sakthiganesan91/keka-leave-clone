@@ -22,30 +22,29 @@ const ShowRemainingLeaves = () => {
     queryKey: ["leavesByMonth", user?.id!],
   });
 
+  const barData = Array.from({ length: 12 }, (_, i) => {
+    const month = i + 1;
+    const found = barChartData.leaveRemaining.find(
+      (item: any) => item.month === month
+    );
+
+    const updated = {
+      ...found,
+      month: getMonthName(month),
+    };
+
+    return updated || { month: getMonthName(month), Leave_Taken: 0 };
+  });
   if (isError) {
     return <>{error}</>;
   }
   if (data && barChartData) {
-    console.log("Bar Chart Data");
-    console.log(barChartData);
     return (
       <>
         <div>
           <BarChart
             showLegend={false}
-            data={Array.from({ length: 12 }, (_, i) => {
-              const month = i + 1;
-              const found = barChartData.leaveRemaining.find(
-                (item: any) => item.month === month
-              );
-
-              const updated = {
-                ...found,
-                month: getMonthName(month),
-              };
-
-              return updated || { month: getMonthName(month), Leave_Taken: 0 };
-            })}
+            data={barData}
             index="month"
             categories={["Leave_Taken"]}
             xAxisLabel="Month"

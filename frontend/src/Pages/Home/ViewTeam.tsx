@@ -2,7 +2,6 @@ import { getTeamEmployees } from "@/apis/employee";
 import ViewTeamCard from "@/components/home/ViewTeamCard";
 import { TeamEmployee } from "@/types";
 import { useQuery } from "@tanstack/react-query";
-import React from "react";
 
 const ViewTeam = () => {
   const { data, isError, isLoading } = useQuery({

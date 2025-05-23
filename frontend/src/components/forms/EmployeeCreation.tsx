@@ -2,19 +2,14 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import {
-  employeeCreationFormValidation,
-  EmployeeLoginFormValidation,
-} from "@/lib/validation";
+import { employeeCreationFormValidation } from "@/lib/validation";
 import "react-phone-number-input/style.css";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/context/auth";
+
 import CustomFormField, { FormFieldTypes } from "../CustomFormField";
-import { Form, FormControl } from "../ui/form";
+import { Form } from "../ui/form";
 import { Button } from "../ui/button";
-import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
-import { Label } from "../ui/label";
+
 import { createEmployee, getDepartments } from "@/apis/employee";
 import { SelectItem } from "../ui/select";
 import { EmployeeCreation as EmployeeCreationProp } from "@/types";
@@ -26,8 +21,6 @@ const EmployeeCreation = () => {
   const [error, setError] = useState("");
 
   const [isError, setIsError] = useState(false);
-
-  const { user } = useAuth();
 
   const { data: departments } = useQuery({
     queryKey: ["departments"],

@@ -1,5 +1,4 @@
 import LeavePolicy from "@/components/forms/LeavePolicy";
-import React from "react";
 
 const AddLeavePolicy = () => {
   return (

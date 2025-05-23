@@ -14,6 +14,9 @@ const CalendarPage = () => {
     refetchOnMount: true,
   });
 
+  if (isLoading) {
+    return <>Loading...</>;
+  }
   if (isError) {
     return <>Error</>;
   }

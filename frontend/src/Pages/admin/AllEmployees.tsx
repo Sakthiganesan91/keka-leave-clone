@@ -123,7 +123,6 @@ const AllEmployees = () => {
                     <Switch
                       checked={employee.is_active}
                       onCheckedChange={(checked) => {
-                        console.log(checked);
                         inActiveMutation.mutate({
                           employeeId: employee.employee_id,
                           isActive: checked,
@@ -135,7 +134,6 @@ const AllEmployees = () => {
                     <Switch
                       checked={employee.in_notice}
                       onCheckedChange={(checked) => {
-                        console.log(checked);
                         noticeMutation.mutate({
                           employeeId: employee.employee_id,
                           inNotice: checked,

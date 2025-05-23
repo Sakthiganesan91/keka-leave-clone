@@ -1,7 +1,7 @@
 import { getRemainingLeavesByEmpoyeeId } from "@/apis/leave";
 import { useAuth } from "@/context/auth";
 import { useQuery } from "@tanstack/react-query";
-import React from "react";
+
 import { DonutChart } from "../charts/DonutChart";
 
 const ReaminingLeaveChart = ({ leavePolicyId }: { leavePolicyId: number }) => {
@@ -15,6 +15,12 @@ const ReaminingLeaveChart = ({ leavePolicyId }: { leavePolicyId: number }) => {
     queryKey: ["getRemainingLeaves", user?.id, leavePolicyId],
   });
 
+  const styles = {
+    fontSize: "0.75rem",
+    fontWeight: "bold",
+    border: "none",
+    outline: "none",
+  };
   if (isError) {
     <>{error}</>;
   }
@@ -49,12 +55,7 @@ const ReaminingLeaveChart = ({ leavePolicyId }: { leavePolicyId: number }) => {
                   category="name"
                   value="value"
                   variant="donut"
-                  style={{
-                    fontSize: "0.75rem",
-                    fontWeight: "bold",
-                    border: "none",
-                    outline: "none",
-                  }}
+                  style={styles}
                   showLabel={true}
                   label={leave_remaining + " Day(s) Available"}
                   colors={["cyan", "pink"]}

@@ -51,7 +51,6 @@ interface CustomProps {
 
 const RenderField = ({ field, props }: { field: any; props: CustomProps }) => {
   const {
-    control,
     fieldType,
     name,
     label,

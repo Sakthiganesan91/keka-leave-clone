@@ -63,6 +63,15 @@ const EmployeeList = ({
     refetchOnMount: true,
   });
 
+  const deptHandler = (event: any) => {
+    setDepartment(event.target.value);
+  };
+
+  const emptyHandler = () => {
+    setInputValue("");
+    setEmployeeName("");
+  };
+
   if (isError) return <>Error</>;
   if (isLoading) return <>Loading</>;
 
@@ -79,9 +88,7 @@ const EmployeeList = ({
             <div className="my-2 bg-gray-800 w-fit py-1 rounded-sm font-bold text-gray-400 ">
               <select
                 className="outline-none border-none focus:border-none focus:outline-none "
-                onChange={(event) => {
-                  handleRoleChange(event);
-                }}
+                onChange={handleRoleChange}
               >
                 <optgroup className="bg-gray-800 text-gray-400 ">
                   <option value="all">All</option>
@@ -99,10 +106,7 @@ const EmployeeList = ({
             <div className="my-2 bg-gray-800 py-1 rounded-sm font-bold text-gray-400 ">
               <select
                 className="outline-none border-none focus:border-none focus:outline-none "
-                onChange={(event) => {
-                  setDepartment(event.target.value);
-                  console.log(event.target.value);
-                }}
+                onChange={deptHandler}
               >
                 <optgroup className="bg-gray-800 text-gray-400 ">
                   <option value="all">All</option>
@@ -126,20 +130,12 @@ const EmployeeList = ({
             type="text"
             ref={inputRef}
             value={inputValue}
-            onChange={(event) => {
-              handleChange(event);
-            }}
+            onChange={handleChange}
             placeholder="Search Employee"
             className="bg-gray-800 rounded-sm outline-none text-white my-2 mx-0.5 py-2 px-2 w-full text-xs"
           />
           {inputValue.length > 0 && (
-            <div
-              className="cursor-pointer"
-              onClick={() => {
-                setInputValue("");
-                setEmployeeName("");
-              }}
-            >
+            <div className="cursor-pointer" onClick={emptyHandler}>
               <SearchX />
             </div>
           )}

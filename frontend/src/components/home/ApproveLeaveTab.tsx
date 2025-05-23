@@ -5,9 +5,9 @@ import {
 } from "@/apis/leave.ts";
 import { useAuth } from "@/context/auth";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import React from "react";
+
 import { Button } from "../ui/button";
-import { PartyPopper } from "lucide-react";
+
 import { toast } from "sonner";
 
 const ApproveLeaveTab = () => {
@@ -51,6 +51,27 @@ const ApproveLeaveTab = () => {
     return <>Loading</>;
   }
 
+  const approveLeave = (leave_id: number) => {
+    approveMutation.mutate({
+      leave_id: leave_id,
+      id: user?.id,
+    });
+  };
+
+  const rejectOrCancel = (leave_id: number) => {
+    rejectOrCancelMutation.mutate({
+      leave_id: leave_id,
+      id: user?.id,
+      status: "rejected",
+    });
+  };
+
+  const getDate = (startDate: string, endDate: string) =>
+    startDate === endDate ? startDate : `${startDate} - ${endDate}`;
+
+  const getFormattedDate = (date: string) =>
+    new Date(date.split("T")[0]).toLocaleDateString();
+
   if (data) {
     return (
       <div>
@@ -80,77 +101,63 @@ const ApproveLeaveTab = () => {
                 </thead>
                 <tbody>
                   {data.leavesToBeHandled.map((leave: any) => {
-                    const startDate = new Date(
-                      leave.start_date.split("T")[0]
-                    ).toLocaleDateString();
-                    const endDate = new Date(
-                      leave.end_date.split("T")[0]
-                    ).toLocaleDateString();
+                    const startDate = getFormattedDate(leave.start_date);
+                    const endDate = getFormattedDate(leave.end_date);
                     return (
-                      <React.Fragment key={leave.leave_id}>
-                        <tr className="border-b border-gray-700 hover:bg-gray-800">
-                          <td className="px-3 py-4">
-                            <div className="font-medium text-white">
-                              {startDate === endDate
-                                ? startDate
-                                : `${startDate} - ${endDate}`}
-                            </div>
-                            <div className="text-sm text-gray-400">
-                              {leave.noofdays}
-                            </div>
-                          </td>
-                          <td className="px-3 py-4">
-                            <div className="text-white font-medium">
-                              {leave.leave_type}
-                            </div>
-                            <div className="text-sm text-gray-400">
-                              {leave.applied_on.split("T")[0]}
-                            </div>
-                          </td>
+                      <tr
+                        className="border-b border-gray-700 hover:bg-gray-800"
+                        key={leave.leave_id}
+                      >
+                        <td className="px-3 py-4">
+                          <div className="font-medium text-white">
+                            {getDate(startDate, endDate)}
+                          </div>
+                          <div className="text-sm text-gray-400">
+                            {leave.noofdays}
+                          </div>
+                        </td>
+                        <td className="px-3 py-4">
+                          <div className="text-white font-medium">
+                            {leave.leave_type}
+                          </div>
+                          <div className="text-sm text-gray-400">
+                            {leave.applied_on.split("T")[0]}
+                          </div>
+                        </td>
 
-                          <td className="px-3 py-4">
-                            <p className="font-bold">{leave.name}</p>
+                        <td className="px-3 py-4">
+                          <p className="font-bold">{leave.name}</p>
 
-                            <span className="text-xs">{leave.designation}</span>
-                          </td>
+                          <span className="text-xs">{leave.designation}</span>
+                        </td>
 
-                          <td className="px-3 py-4 text-white">
-                            {leave.leave_reason}
-                          </td>
+                        <td className="px-3 py-4 text-white">
+                          {leave.leave_reason}
+                        </td>
 
-                          <td className="px-3 py-4">
-                            <span className="text-yellow-400 font-semibold">
-                              {leave.status}
-                            </span>
-                          </td>
+                        <td className="px-3 py-4">
+                          <span className="text-yellow-400 font-semibold">
+                            {leave.status}
+                          </span>
+                        </td>
 
-                          <td className="px-3 py-4 text-right text-white flex gap-1">
-                            <Button
-                              className="text-black bg-cyan-400"
-                              onClick={() => {
-                                approveMutation.mutate({
-                                  leave_id: leave.leave_id,
-                                  id: user?.id,
-                                });
-                              }}
-                            >
-                              Approve
-                            </Button>
-                            <Button
-                              className="text-white bg-red-500"
-                              onClick={() => {
-                                rejectOrCancelMutation.mutate({
-                                  leave_id: leave.leave_id,
-                                  id: user?.id,
-                                  status: "rejected",
-                                });
-                              }}
-                            >
-                              Reject
-                            </Button>
-                          </td>
-                        </tr>
-                      </React.Fragment>
+                        <td className="px-3 py-4 text-right text-white flex gap-1">
+                          <Button
+                            className="text-black bg-cyan-400"
+                            onClick={() => approveLeave(leave.leave_id)}
+                          >
+                            Approve
+                          </Button>
+                          <Button
+                            className="text-white bg-red-500"
+                            onClick={() => {
+                              rejectOrCancel(leave.leave_id);
+                            }}
+                          >
+                            Reject
+                          </Button>
+                        </td>
+                      </tr>
                     );
                   })}
                 </tbody>

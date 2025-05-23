@@ -8,9 +8,11 @@ import { AuthContextProvider } from "./context/auth.tsx";
 import { ThemeProvider } from "./context/theme-provider.tsx";
 
 const queryClient = new QueryClient();
+const defaultTheme = "dark";
+const storageKey = `vite-ui-theme`;
 
 createRoot(document.getElementById("root")!).render(
-  <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+  <ThemeProvider defaultTheme={defaultTheme} storageKey={storageKey}>
     <QueryClientProvider client={queryClient}>
       <AuthContextProvider>
         <BrowserRouter>
